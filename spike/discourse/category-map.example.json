@@ -1,0 +1,11 @@
+{
+  "note": "Fill category IDs after provisioning the live Discourse spike instance.",
+  "categories": {
+    "en_discussions": null,
+    "en_guides": null,
+    "en_qa": null,
+    "ru_discussions": null,
+    "ru_guides": null,
+    "ru_qa": null
+  }
+}
