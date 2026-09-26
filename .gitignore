@@ -1,0 +1,1 @@
+__pycache__/\n*.py[cod]\n.env\n.env.*\n!.env.example\n.DS_Store\nspike/discourse/fixtures/created-map.json\nspike/discourse/results/\n
