@@ -1,0 +1,36 @@
+{"case_id":"en2ru-immigration-1","query_language":"en","target_language":"ru","query":"How do I register as an EU citizen after moving to Cyprus?","expected_fixture_ids":["ru-immigration-q1"],"domain":"immigration"}
+{"case_id":"ru2en-immigration-1","query_language":"ru","target_language":"en","query":"Как зарегистрироваться гражданину ЕС после переезда на Кипр?","expected_fixture_ids":["en-immigration-q1"],"domain":"immigration"}
+{"case_id":"en2ru-immigration-2","query_language":"en","target_language":"ru","query":"What documents are needed for a spouse residence permit in Cyprus?","expected_fixture_ids":["ru-immigration-q2"],"domain":"immigration"}
+{"case_id":"ru2en-immigration-2","query_language":"ru","target_language":"en","query":"Какие документы нужны для ВНЖ супругу на Кипре?","expected_fixture_ids":["en-immigration-q2"],"domain":"immigration"}
+{"case_id":"en2ru-cars-1","query_language":"en","target_language":"ru","query":"Can I transfer ownership of a car before its MOT is renewed?","expected_fixture_ids":["ru-cars-q1"],"domain":"cars"}
+{"case_id":"ru2en-cars-1","query_language":"ru","target_language":"en","query":"Можно ли переоформить машину до продления MOT?","expected_fixture_ids":["en-cars-q1"],"domain":"cars"}
+{"case_id":"en2ru-cars-2","query_language":"en","target_language":"ru","query":"What documents are needed to transfer a used car in Cyprus?","expected_fixture_ids":["ru-cars-q2"],"domain":"cars"}
+{"case_id":"ru2en-cars-2","query_language":"ru","target_language":"en","query":"Какие документы нужны для переоформления подержанной машины на Кипре?","expected_fixture_ids":["en-cars-q2"],"domain":"cars"}
+{"case_id":"en2ru-property-1","query_language":"en","target_language":"ru","query":"What should I check before signing a long-term rental in Cyprus?","expected_fixture_ids":["ru-property-q1"],"domain":"property"}
+{"case_id":"ru2en-property-1","query_language":"ru","target_language":"en","query":"Что проверить перед подписанием долгосрочной аренды на Кипре?","expected_fixture_ids":["en-property-q1"],"domain":"property"}
+{"case_id":"en2ru-property-2","query_language":"en","target_language":"ru","query":"Can a landlord increase rent during a fixed-term lease?","expected_fixture_ids":["ru-property-q2"],"domain":"property"}
+{"case_id":"ru2en-property-2","query_language":"ru","target_language":"en","query":"Может ли арендодатель поднять цену во время фиксированного договора?","expected_fixture_ids":["en-property-q2"],"domain":"property"}
+{"case_id":"en2ru-tax-1","query_language":"en","target_language":"ru","query":"When does a new Cyprus resident become tax resident?","expected_fixture_ids":["ru-tax-q1"],"domain":"tax"}
+{"case_id":"ru2en-tax-1","query_language":"ru","target_language":"en","query":"Когда новый житель Кипра становится налоговым резидентом?","expected_fixture_ids":["en-tax-q1"],"domain":"tax"}
+{"case_id":"en2ru-tax-2","query_language":"en","target_language":"ru","query":"What is the 60-day tax residency rule?","expected_fixture_ids":["ru-tax-q2"],"domain":"tax"}
+{"case_id":"ru2en-tax-2","query_language":"ru","target_language":"en","query":"Как работает правило 60 дней налогового резидентства?","expected_fixture_ids":["en-tax-q2"],"domain":"tax"}
+{"case_id":"en2ru-healthcare-1","query_language":"en","target_language":"ru","query":"How do I register for GESY after moving to Cyprus?","expected_fixture_ids":["ru-healthcare-q1"],"domain":"healthcare"}
+{"case_id":"ru2en-healthcare-1","query_language":"ru","target_language":"en","query":"Как зарегистрироваться в GESY после переезда на Кипр?","expected_fixture_ids":["en-healthcare-q1"],"domain":"healthcare"}
+{"case_id":"en2ru-healthcare-2","query_language":"en","target_language":"ru","query":"Can I choose a personal doctor in another city?","expected_fixture_ids":["ru-healthcare-q2"],"domain":"healthcare"}
+{"case_id":"ru2en-healthcare-2","query_language":"ru","target_language":"en","query":"Можно ли выбрать личного врача в другом городе?","expected_fixture_ids":["en-healthcare-q2"],"domain":"healthcare"}
+{"case_id":"en2ru-company-1","query_language":"en","target_language":"ru","query":"How long does it take to register a Cyprus company?","expected_fixture_ids":["ru-company-q1"],"domain":"company"}
+{"case_id":"ru2en-company-1","query_language":"ru","target_language":"en","query":"Сколько занимает регистрация компании на Кипре?","expected_fixture_ids":["en-company-q1"],"domain":"company"}
+{"case_id":"en2ru-company-2","query_language":"en","target_language":"ru","query":"Do I need a local director for a Cyprus company?","expected_fixture_ids":["ru-company-q2"],"domain":"company"}
+{"case_id":"ru2en-company-2","query_language":"ru","target_language":"en","query":"Нужен ли местный директор для кипрской компании?","expected_fixture_ids":["en-company-q2"],"domain":"company"}
+{"case_id":"en2ru-schools-1","query_language":"en","target_language":"ru","query":"How do I apply to a public school in Cyprus?","expected_fixture_ids":["ru-schools-q1"],"domain":"schools"}
+{"case_id":"ru2en-schools-1","query_language":"ru","target_language":"en","query":"Как записать ребёнка в государственную школу на Кипре?","expected_fixture_ids":["en-schools-q1"],"domain":"schools"}
+{"case_id":"en2ru-schools-2","query_language":"en","target_language":"ru","query":"What documents does a child need for school registration?","expected_fixture_ids":["ru-schools-q2"],"domain":"schools"}
+{"case_id":"ru2en-schools-2","query_language":"ru","target_language":"en","query":"Какие документы нужны ребёнку для регистрации в школе?","expected_fixture_ids":["en-schools-q2"],"domain":"schools"}
+{"case_id":"en2ru-utilities-1","query_language":"en","target_language":"ru","query":"How do I put an electricity account in my name?","expected_fixture_ids":["ru-utilities-q1"],"domain":"utilities"}
+{"case_id":"ru2en-utilities-1","query_language":"ru","target_language":"en","query":"Как переоформить электричество на своё имя?","expected_fixture_ids":["en-utilities-q1"],"domain":"utilities"}
+{"case_id":"en2ru-utilities-2","query_language":"en","target_language":"ru","query":"What do I need to connect water after moving?","expected_fixture_ids":["ru-utilities-q2"],"domain":"utilities"}
+{"case_id":"ru2en-utilities-2","query_language":"ru","target_language":"en","query":"Что нужно для подключения воды после переезда?","expected_fixture_ids":["en-utilities-q2"],"domain":"utilities"}
+{"case_id":"en2ru-services-1","query_language":"en","target_language":"ru","query":"How do I find a reliable mechanic in Limassol?","expected_fixture_ids":["ru-services-q1"],"domain":"services"}
+{"case_id":"ru2en-services-1","query_language":"ru","target_language":"en","query":"Как найти надёжного автомеханика в Лимассоле?","expected_fixture_ids":["en-services-q1"],"domain":"services"}
+{"case_id":"en2ru-services-2","query_language":"en","target_language":"ru","query":"What is a normal call-out fee for a plumber?","expected_fixture_ids":["ru-services-q2"],"domain":"services"}
+{"case_id":"ru2en-services-2","query_language":"ru","target_language":"en","query":"Сколько обычно стоит выезд сантехника?","expected_fixture_ids":["en-services-q2"],"domain":"services"}
