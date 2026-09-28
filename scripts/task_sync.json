@@ -1,0 +1,10 @@
+{
+  "remote": "origin",
+  "remote_urls": [
+    "https://github.com/turbomurzik/kafene.git",
+    "https://github.com/turbomurzik/kafene",
+    "git@github.com:turbomurzik/kafene.git",
+    "ssh://git@github.com/turbomurzik/kafene.git"
+  ],
+  "allowed_untracked": []
+}
