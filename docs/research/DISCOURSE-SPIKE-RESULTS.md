@@ -112,18 +112,73 @@ than the separate Related Topics feature.
 
 ## F. Ask AI authority/freshness
 
-For every controlled conflict record:
+Live test configuration: full-page Ask AI request path
+`POST /discourse-ai/discoveries/reply`, authenticated as `user2`; built-in
+`Ask AI Synthesis` agent (`-41`); Google Vertex AI
+`google/gemini-3.8-flash` (`Gemini 3.8 Flash (Vertex)`, LLM model id `1`).
+`ai_bot_enabled` and `ai_ask_ai_enabled` were both enabled. The existing
+`intfloat/multilingual-e5-large` embedding definition was not changed. Exactly
+three requests were submitted; no failed/no-answer case was retried.
 
-- query;
-- canonical/current guide;
-- stale/conflicting topic;
-- answer;
-- citations/links;
-- whether stale content leaked into answer;
-- whether current content was preferred;
-- configuration/agent used.
+### Cars — MIXED
 
-Summary:
+- Query: `Как сейчас правильно купить и переоформить подержанную машину на
+  Кипре? Используй актуальную информацию сообщества и укажи источник.`
+- Controlled pair: current
+  [`ru-guide-used-car-transfer`](https://kafene-34-156-242-215.sslip.io/t/topic/121/1)
+  versus stale
+  [`ru-stale-cars`](https://kafene-34-156-242-215.sslip.io/t/mot/141/1).
+- Ask AI outcome: `answered`. Exact answer: `Для переоформления подержанного
+  автомобиля на Кипре новый владелец должен зарегистрировать его на себя в
+  дорожном ведомстве. Покупатель и продавец совместно подают подписанный договор
+  купли-продажи, свидетельство о регистрации транспортного средства, документы,
+  удостоверяющие личность, а также действующий страховой полис. Кроме того,
+  необходимо оплатить установленный сбор за смену владельца. После завершения
+  процедуры покупатель официально вносится в реестр как новый владелец машины.`
+- Sources used: [Переоформление автомобиля с пробегом на
+  покупателя](https://kafene-34-156-242-215.sslip.io/t/topic/18/1) and
+  [Changing the registered keeper after buying a second-hand
+  car](https://kafene-34-156-242-215.sslip.io/t/changing-the-registered-keeper-after-buying-a-second-hand-car/12/1)
+  (`source_post_ids` `18` and `14`). These are the earlier smoke-test semantic
+  target topics, not either member of the controlled pair.
+- Source preference: neither controlled source was selected. The canonical
+  guide therefore was not preferred or cited.
+- Stale leakage: no observed leakage; `ru-stale-cars` was not a source and its
+  stale-control wording was not repeated.
+
+### Immigration — FAIL
+
+- Query: `What is the current process for registering residence in Cyprus?
+  Please use the latest guidance from this community and cite the source.`
+- Controlled pair: current
+  [`en-guide-residency-registration`](https://kafene-34-156-242-215.sslip.io/t/registering-residence-in-cyprus/118/1)
+  versus stale
+  [`en-stale-immigration`](https://kafene-34-156-242-215.sslip.io/t/old-advice-about-immigration-and-residency/138/1).
+- Ask AI outcome: `no_answer`; no answer text or source links were returned.
+  The canonical post was present in the candidate set, but Ask AI selected no
+  source (`source_post_ids` was empty).
+- Source preference: none. Current canonical content was not cited.
+- Stale leakage: none observed because no answer was produced and the stale
+  topic was not selected as a source.
+
+### Tax — FAIL
+
+- Query: `Каковы актуальные правила налогового резидентства на Кипре? Используй
+  самый свежий материал сообщества и приведи источник.`
+- Controlled pair: current
+  [`ru-guide-tax-residency`](https://kafene-34-156-242-215.sslip.io/t/topic/125/1)
+  versus stale
+  [`ru-stale-tax`](https://kafene-34-156-242-215.sslip.io/t/topic/145/1).
+- Ask AI outcome: `failed` at the `synthesis` stage; no answer text or source
+  links were returned (`source_post_ids` was empty).
+- Source preference: none. Current canonical content was not cited.
+- Stale leakage: none observed because no answer was produced and the stale
+  topic was not selected as a source.
+
+Summary: **FAIL**. The test found no direct stale-content leakage, but Ask AI
+cited the current canonical guide in `0/3` cases: one answer used alternate
+smoke topics, one case returned no answer, and one failed during synthesis.
+This does not demonstrate a reliable canonical-over-stale authority preference.
 
 ## G. Citation and link behavior
 
