@@ -2,6 +2,11 @@
 
 This directory contains the reproducible assets for the forum-engine feasibility test.
 
+The completed infrastructure-task-1 provisioning record is in
+[`PROVISIONING.md`](PROVISIONING.md). It documents the live disposable host,
+official installation path, smoke tests, versions, and deferred scope without
+including credentials.
+
 ## What is prepared here
 
 - synthetic EN/RU fixture corpus;

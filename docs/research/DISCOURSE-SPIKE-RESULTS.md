@@ -6,21 +6,32 @@ This document must contain measured behavior from a live Discourse instance. Do 
 
 ## A. Environment
 
-- Date:
-- Discourse version / commit:
-- Release channel:
-- discourse-ai version / commit:
-- Solved version:
-- Doc Categories version:
-- Database:
-- Embedding provider/model:
-- LLM provider/model:
-- Host / CPU / RAM:
-- Test URL:
-- Public/private corpus restrictions:
+- Date: 2026-10-02
+- Discourse version / commit: `2026.10.0-latest` / `67bc74d0d83f8037ec538c1299b8d8cb59211319`
+- Release channel: `latest`
+- discourse-ai version / commit: bundled with the core checkout at `67bc74d0d83f8037ec538c1299b8d8cb59211319`; not configured
+- Solved version: bundled with the core checkout at `67bc74d0d83f8037ec538c1299b8d8cb59211319`; not configured or tested
+- Doc Categories version: not installed
+- Database: PostgreSQL `18.6` (`Debian 18.6-1.pgdg13+2`)
+- Embedding provider/model: not configured
+- LLM provider/model: not configured
+- Host / CPU / RAM: disposable Google Compute Engine VM `kafene-discourse-spike` in `europe-west1-b`; `e2-standard-2`, 2 vCPU, 8 GB RAM, 30 GB `pd-balanced` disk
+- OS / kernel: Ubuntu `24.04.5 LTS`; Linux `7.0.0-1011-gcp`
+- Docker version: Docker Engine Community `29.8.2` (client and server)
+- Installation method: official `discourse/discourse_docker` one-line installer, generated `app.yml`, then `launcher rebuild app`; no custom Compose stack
+- Hostname: `kafene-34-156-242-215.sslip.io` (`34.156.242.215`)
+- Test URL: https://kafene-34-156-242-215.sslip.io/
+- HTTPS status: enabled with a valid Let's Encrypt certificate; HTTP redirects with `301`; HTTPS returns `200`; curl certificate verification result `0`
+- SMTP status: not configured; installer option `DISCOURSE_SKIP_EMAIL_SETUP=1`
+- Backup / restore status: full backup created successfully with the supported `discourse backup` command (`discourse-2026-10-02-103528-v20261001073226.tar.gz`, 2,919,636 bytes); restore not tested
+- Public/private corpus restrictions: no KAFENE fixture corpus loaded; only synthetic provisioning smoke-test records exist
 
 ## B. Enabled features
 
+- [x] Base web UI over HTTPS
+- [x] Administrator password login and admin dashboard access
+- [x] Active normal test user
+- [x] Smoke category, topic and reply
 - [ ] EN root category
 - [ ] RU root category
 - [ ] Guides categories
@@ -31,7 +42,7 @@ This document must contain measured behavior from a live Discourse instance. Do 
 - [ ] Embeddings
 - [ ] Semantic search
 - [ ] Ask AI
-- [ ] API keys
+- [x] API keys
 - [ ] Webhooks
 - [ ] Prototype custom fields
 
