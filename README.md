@@ -1,67 +1,55 @@
 # KAFENE
 
-Cyprus-first bilingual (EN/RU) community + living knowledge platform.
+Cyprus-first bilingual (EN/RU) community-backed living knowledge platform.
 
 ## Current stage
 
-Architecture validation / feasibility spike.
+Product architecture consolidation after the Discourse feasibility PoC.
 
-The immediate decision is whether **Discourse** can serve as the community and knowledge core without forcing KAFENE to build and maintain a separate forum/CMS/RAG stack.
+Start with:
+
+- `docs/00-START-HERE.md`
+- `docs/00-DECISIONS.md`
+- `docs/00-DOCS-INVENTORY.md`
 
 ## Product north star
 
-> If someone has a practical question about Cyprus, KAFENE should be the first place they think to ask or search.
+> If someone has a practical question about Cyprus, KAFENE should be the first place they think to search or ask.
 
-KAFENE is intended to combine:
+## Current accepted shape
 
-- community discussions;
-- Q&A and accepted solutions;
-- canonical / living guides;
-- bilingual EN/RU knowledge transfer;
-- source monitoring and freshness;
-- semantic question routing;
-- Ask KAFENE over the platform's own corpus.
+KAFENE is intentionally split into two connected surfaces.
 
-## Current candidate architecture
+### KAFENE website / knowledge layer
 
-```text
-Discourse
-  ├─ EN community tree
-  ├─ RU community tree
-  ├─ Q&A / Solved
-  ├─ Wiki + Doc Categories
-  ├─ Discourse AI / embeddings / Ask AI
-  └─ moderation / users / revisions / SEO
-          │
-          │ supported APIs + plugin interfaces
-          ▼
-kafene-bridge
-          │
-          ▼
-kafene-orchestrator
-  ├─ source monitoring
-  ├─ deterministic diff
-  ├─ update proposals
-  ├─ cross-language orchestration
-  ├─ AI publication governance
-  └─ audit trail
-```
+- homepage / live Cyprus dashboard;
+- collections and journeys;
+- standalone guides;
+- official-source "What changed" entries;
+- future News/city discovery;
+- search;
+- future custom Ask KAFENE.
 
-This architecture is **not yet accepted**. It must pass the Discourse feasibility spike first.
+### KAFENE community / Discourse
 
-## Repository map
+- discussions;
+- questions and answers;
+- user/community experience;
+- moderation and profiles;
+- multilingual semantic community retrieval.
 
-- `docs/research/DISCOURSE-FEASIBILITY-SPIKE.md` — exact spike scope and pass/fail criteria.
-- `docs/research/DISCOURSE-SPIKE-RESULTS.md` — evidence/results template.
-- `docs/architecture/ADR-001-FORUM-ENGINE.md` — engine decision record; intentionally not finalized yet.
-- `spike/discourse/` — reproducible spike assets, fixtures and evaluation material.
+The website and forum link to each other where useful, but the forum is not the CMS for KAFENE guides.
+
+## Validated Discourse evidence
+
+The live spike validated multilingual embeddings and cross-language semantic retrieval. The 36-case evaluation recorded combined Hit@1 0.9722, Hit@3 1.0000, Hit@5 1.0000 and MRR 0.9861.
+
+Native Discourse Ask AI did not pass KAFENE's authority/freshness test and is not the production answer layer.
+
+See `docs/research/DISCOURSE-SPIKE-RESULTS.md` for evidence and `docs/00-DECISIONS.md` for accepted conclusions.
 
 ## Current rule
 
-Do not build KAFENE as a custom forum.
+Do not build a custom forum engine.
 
-Prefer supported platform capabilities, official plugins, APIs, plugin outlets and thin integration. Any custom component must justify its maintenance burden.
-
-## Status
-
-Repository initialized for the Discourse feasibility spike.
+Do not assume research notes are current architecture. Follow the documentation hierarchy in `docs/00-START-HERE.md`.
