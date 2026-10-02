@@ -76,15 +76,27 @@ Dataset: `spike/discourse/evaluation/cross_language_cases.jsonl`
 
 | Metric | EN -> RU | RU -> EN | Combined |
 |---|---:|---:|---:|
-| Hit@1 | | | |
-| Hit@3 | | | |
-| Hit@5 | | | |
-| MRR | | | |
+| Hit@1 | 0.9444 (17/18) | 1.0000 (18/18) | 0.9722 (35/36) |
+| Hit@3 | 1.0000 (18/18) | 1.0000 (18/18) | 1.0000 (36/36) |
+| Hit@5 | 1.0000 (18/18) | 1.0000 (18/18) | 1.0000 (36/36) |
+| MRR | 0.9722 | 1.0000 | 0.9861 |
 
 Observed failure clusters:
 
-Preliminary task-2 smoke test only; this is not the 36-case evaluation and no
-aggregate retrieval metrics were calculated.
+- Full 36-case run completed: 18 EN -> RU and 18 RU -> EN cases over the 122-topic
+  fixture corpus. All 122 topics had embeddings before evaluation.
+- Each query used the registered discourse-ai `ai:search` plugin API that backs
+  the validated full-page `/search` UI. The supported category syntax
+  `#kafene-ru` or `#kafene-en` constrained results to the case's target language.
+  Fifty semantic results per case were exported to the JSONL format consumed by
+  `spike/discourse/scripts/run_eval.py`.
+- `run_eval.py` reported no missing expected topic in the exported result sets.
+  The only non-Hit@1 case was `en2ru-cars-1`: the deliberately stale control
+  `ru-stale-cars` ranked first and expected `ru-cars-q1` ranked second. This is
+  an authority/freshness failure signal for later testing, not a top-3 or top-5
+  cross-language retrieval miss.
+
+Earlier task-2 controlled smoke test:
 
 | Direction | Full-page AI Search query | Expected cross-language target | Target rank | Designed lexical negative control | Control rank | Result |
 |---|---|---|---:|---|---:|---|
