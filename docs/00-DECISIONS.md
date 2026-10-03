@@ -66,7 +66,6 @@ For MVP, either may be editorial/manual. Automated monitoring/aggregation pipeli
 - custom Ask KAFENE architecture;
 - deterministic authority/freshness reranking;
 - Jev integration;
-- final replacement/rewrite of ADR-001;
 - exact Cyprus pricing/packages and regulated-category lead rules;
 - exact multi-deployment administration model.
 
@@ -126,3 +125,33 @@ It includes:
 Future changes that materially alter these semantics require an explicit decision update.
 
 **Status:** ACCEPTED.
+
+
+## DEC-010 — Каноническая граница KAFENE Website ↔ Discourse
+
+**Решение:** `docs/architecture/ADR-001-FORUM-ENGINE.md` принят как
+канонический архитектурный контракт границы между KAFENE website и Discourse.
+
+Принятые положения:
+
+- Discourse является system of record для forum/community data;
+- KAFENE website/content layer является system of record для editorial knowledge;
+- website не должен зависеть от shared/direct Discourse database coupling;
+- `topic_space_id` используется как semantic linkage, но не как глобальный
+  identity key и не заменяет native IDs;
+- P0 website остаётся публичным/anonymous, а Discourse authentication относится
+  только к forum participation;
+- Discourse `id`, `username` и email не становятся постоянными глобальными
+  идентификаторами пользователя KAFENE;
+- до первой website-native account capability обязателен отдельный
+  Auth/Identity ADR, а конечный UX должен обеспечивать один login experience
+  между website и Discourse;
+- P0 frontend не подключает live Discourse data до отдельного
+  website↔Discourse integration contract;
+- недоступность Discourse не должна делать knowledge website неработоспособным.
+
+Конкретные API/webhook/cache/sync/auth механизмы, frontend, CMS/content storage,
+search engine, IdP vendor и будущая Ask KAFENE architecture этим решением не
+выбираются.
+
+**Статус:** ACCEPTED.
