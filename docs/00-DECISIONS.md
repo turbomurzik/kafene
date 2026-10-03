@@ -67,4 +67,44 @@ For MVP, either may be editorial/manual. Automated monitoring/aggregation pipeli
 - custom Ask KAFENE architecture;
 - deterministic authority/freshness reranking;
 - Jev integration;
-- final replacement/rewrite of ADR-001.
+- final replacement/rewrite of ADR-001;
+- exact Cyprus pricing/packages and regulated-category lead rules;
+- exact multi-deployment administration model.
+
+
+## DEC-007 — Portable domain-agnostic core
+
+**Decision:** KAFENE must separate a portable product core from market-specific deployment configuration.
+
+Portable core may define generic entities and mechanics such as guides, journeys, collections, changes, discussions, localities, businesses, offers, leads, sponsorship placements, subscriptions and analytics events.
+
+Market-specific configuration contains country/state/city hierarchy, brand, languages, categories, currency, pricing, local sources, regulatory constraints and partner configuration.
+
+Cyprus is the first deployment, not a hard-coded domain boundary of the core. A later deployment such as New York must be possible without redesigning the core entity model.
+
+**Status:** ACCEPTED.
+
+## DEC-008 — Monetization follows high-intent actions, not paywalled knowledge
+
+**Decision:** KAFENE monetization should preserve the free knowledge/community acquisition loop and monetize high-intent next actions.
+
+Accepted revenue families:
+- paid business/expert profiles;
+- clearly disclosed sponsorship placements;
+- qualified lead routing where locally permitted;
+- optional consumer Premium;
+- affiliate/CPA where appropriate.
+
+Programmatic display advertising is not the primary business model.
+
+Portable commercial primitives to preserve in the architecture:
+- `Business`;
+- `Offer`;
+- `Lead`;
+- sponsorship/commercial placement;
+- subscription;
+- monetization analytics events.
+
+Specific prices, package boundaries and regulated-category lead economics remain deployment-specific working assumptions, not universal core rules.
+
+**Status:** ACCEPTED.
