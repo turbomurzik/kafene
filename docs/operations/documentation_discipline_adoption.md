@@ -2,11 +2,9 @@
 
 Status: **OPERATIONS**
 
-KAFENE adopts:
+KAFENE adopts `docs/standards/DOCUMENTATION_DISCIPLINE_v1.0.md` for all durable project documentation.
 
-`docs/standards/DOCUMENTATION_DISCIPLINE_v1.0.md`
-
-for all durable project documentation.
+`PROJECT_RULES.md` remains the canonical repository-governance source. This adoption record and the standard are subordinate to it.
 
 ## Scope
 
@@ -26,11 +24,13 @@ Does not apply to:
 
 ## KAFENE-specific control surface
 
-The required root documents are:
+The required control documents are:
 
-- `docs/00-START-HERE.md`
+- `PROJECT_RULES.md`
+- `docs/STATUS.md`
 - `docs/00-DECISIONS.md`
 - `docs/00-DOCS-INVENTORY.md`
+- `docs/00-START-HERE.md` for onboarding
 
 ## Current enforcement
 
