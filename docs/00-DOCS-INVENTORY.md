@@ -23,6 +23,7 @@ This inventory is the registry of durable project documentation. A file being ne
 | `docs/research/JEV-RERANKING-SPIKE.md` | DEFERRED | Future reranking research hypothesis. Not current architecture. |
 | `docs/research/KAFENE-INFORMATION-ARCHITECTURE-RESEARCH.md` | RESEARCH INPUT | Research into IA, categories, tags, and EN/RU structure; not canonical until separate validation. |
 | `docs/architecture/ADR-001-FORUM-ENGINE.md` | CANONICAL | Принятый boundary contract между KAFENE website/content layer и Discourse community/forum substrate. |
+| `docs/architecture/WEBSITE-DISCOURSE-INTEGRATION-CONTRACT.md` | ACTIVE DRAFT | Узкий P0 production contract для read-only server-side получения публичных Discourse community metadata, cache/freshness и graceful degradation. |
 | `docs/operations/agent_execution_discipline_adoption.md` | OPERATIONS | KAFENE adoption boundary for the pinned execution standard, reconciled to current governance. |
 | `docs/operations/git-handoff.md` | OPERATIONS | Git/worktree handoff procedure. |
 | `docs/operations/documentation_discipline_adoption.md` | OPERATIONS | KAFENE adoption of the documentation discipline standard. |
