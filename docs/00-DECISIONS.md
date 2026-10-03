@@ -155,3 +155,34 @@ search engine, IdP vendor и будущая Ask KAFENE architecture этим р�
 выбираются.
 
 **Статус:** ACCEPTED.
+
+
+## DEC-011 — P0 Website ↔ Discourse integration contract
+
+**Решение:** `docs/architecture/WEBSITE-DISCOURSE-INTEGRATION-CONTRACT.md`
+принят как канонический P0 integration contract.
+
+Принятые положения:
+
+- integration работает read-only в направлении Discourse -> KAFENE website;
+- browser/frontend не обращается напрямую к Discourse;
+- server-side fetch использует только anonymous/public access level и не должен
+  иметь privileged visibility к private/staff/restricted content;
+- `topic_space_id -> discourse_topic_id` mapping в P0 хранится как curated
+  KAFENE content metadata без отдельного mapping service;
+- normalized KAFENE-side model зависит и передаёт frontend только утверждённый
+  allowlist community metadata;
+- excerpt, author, avatar, user profile data, arbitrary post body и прочие
+  неутверждённые поля не входят в P0 contract;
+- P0 использует pull model; webhook/event-driven integration deferred;
+- short-lived cache допустим, но не становится source of truth или persisted
+  last-known read model;
+- cache freshness ceiling без staleness UI составляет 15 минут от `fetched_at`;
+- failure policy — hide-on-outage с resource-level degradation;
+- homepage degradation логируется согласно canonical HOME INTERACTION MODEL;
+- Discourse остаётся authoritative source для forum/community state.
+
+Конкретные endpoint paths, cache technology, рабочий TTL внутри 15-minute ceiling,
+retry/backoff значения и иные implementation details этим решением не выбираются.
+
+**Статус:** ACCEPTED.
