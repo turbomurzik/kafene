@@ -1,648 +1,949 @@
-# KAFENE Home Interaction Model
+# Модель взаимодействия главной страницы KAFENE
 
-**Status:** ACTIVE DRAFT
+**Статус:** ACTIVE DRAFT
 
-## Purpose
+## Назначение
 
-Define the MVP behavior of the KAFENE homepage/dashboard before frontend
-implementation.
+Зафиксировать поведение MVP главной страницы / дэшборда KAFENE до начала frontend-реализации.
 
-This document covers interaction mechanics only:
+Документ определяет:
 
-- what each homepage block represents;
-- where its content comes from in MVP;
-- how items are selected;
-- where clicks go;
-- how the block is updated;
-- what happens when data is missing.
+- что означает каждый блок главной страницы;
+- откуда берётся его содержимое в MVP;
+- как элементы отбираются;
+- куда ведёт клик;
+- как блок обновляется;
+- что происходит при отсутствии данных;
+- как блоки взаимодействуют между собой.
 
-It does **not** define:
-- final visual design;
-- frontend technology;
-- automated News ingestion;
-- automated official-source monitoring;
+Документ **не определяет**:
+
+- финальный визуальный дизайн;
+- frontend-стек;
+- автоматизированный сбор новостей;
+- автоматизированный мониторинг официальных источников;
 - custom Ask KAFENE;
-- Jev/reranking;
-- final city-services/business architecture.
+- Jev / reranking;
+- финальную архитектуру городских сервисов и бизнеса.
 
-## Product boundary
+## Граница продукта
 
-KAFENE has two connected product surfaces:
+KAFENE состоит из двух связанных поверхностей.
 
-### KAFENE website
+### Сайт KAFENE
 
-Owns:
-- homepage/dashboard;
-- collections/hubs;
+Отвечает за:
+
+- главную страницу / дэшборд;
+- collections / hubs;
 - journeys;
-- standalone guides;
-- official-change entries;
-- later News/city discovery;
-- search;
-- later custom Ask KAFENE.
+- самостоятельные гайды;
+- записи об официальных изменениях;
+- позднее — News и city discovery;
+- поиск;
+- позднее — custom Ask KAFENE.
 
-### KAFENE forum / Discourse
+### Форум KAFENE / Discourse
 
-Owns:
-- questions;
-- discussions;
-- replies;
-- user/community experience;
-- moderation/community mechanics.
+Отвечает за:
 
-The homepage may surface forum activity, but it is not a forum homepage and must
-not collapse editorial knowledge into Discourse.
+- вопросы;
+- обсуждения;
+- ответы;
+- пользовательский и локальный опыт;
+- community mechanics;
+- модерацию.
 
-## Homepage objective
+Главная страница может показывать активность форума, но не является форумной главной и не должна превращать редакционный knowledge layer в оболочку над Discourse.
 
-The homepage should answer four user needs quickly:
+## Цель главной страницы
 
-1. What matters in Cyprus right now?
-2. Where do I start for a common life task?
-3. What is the community discussing?
-4. What has officially changed?
+Главная должна быстро отвечать минимум на четыре пользовательских вопроса:
 
-The homepage is a living Cyprus dashboard, not a category index.
+1. Что на Кипре важно прямо сейчас?
+2. С чего начать типичную жизненную задачу?
+3. Что сейчас обсуждает сообщество?
+4. Что официально изменилось?
 
-## Primary entry interaction
+Главная — это живой дэшборд по Кипру, а не каталог форумных категорий.
 
-### Hero / search
+## Основная точка входа
 
-**Purpose**
+### Hero / поиск
 
-Let the user express a practical Cyprus question or intent immediately.
+**Назначение**
 
-**MVP source**
+Дать пользователю возможность сразу сформулировать практический вопрос или намерение.
 
-Static product UI plus existing search capability.
+**Источник в MVP**
 
-**Interaction**
+Статический интерфейс продукта + существующий поиск.
 
-Primary input:
-> What do you want to know about Cyprus?
+**Взаимодействие**
 
-Primary action:
-- submit to KAFENE search.
+Основное поле:
 
-Secondary navigation may expose:
-- Guides;
-- Forum;
-- Cities.
+> Что вы хотите узнать о Кипре?
 
-**MVP boundary**
+Основное действие:
 
-Do not present custom Ask KAFENE as available until its own architecture and
-answer-layer behavior are implemented.
+- отправить запрос в поиск KAFENE.
+
+Во вторичной навигации должны быть доступны как минимум:
+
+- Гайды;
+- Форум;
+- Города.
+
+**Граница MVP**
+
+Не показывать custom Ask KAFENE как доступную функцию, пока отдельно не реализованы его архитектура и поведение answer layer.
 
 **Fallback**
 
-Search remains available even if all dynamic homepage blocks fail.
+Поиск должен оставаться доступным даже при полном отказе динамических блоков главной страницы.
 
 ---
 
-## Block 1 — What matters now
+## Блок 1 — Что важно сейчас
 
-### Purpose
+### Назначение
 
-Editorially surface a small set of timely, high-value Cyprus topics that deserve
-attention now.
+Редакционно показывать небольшой набор своевременных и практически важных тем по Кипру.
 
-Examples:
-- Tax 2026;
-- school enrollment period;
-- residence-permit renewal season;
-- a material official process change.
+Примеры:
 
-### MVP source
+- Налоги 2026;
+- запись детей в школы;
+- сезон продления ВНЖ;
+- существенное изменение официальной процедуры.
 
-Manual/editorial KAFENE content.
+### Источник в MVP
 
-No automated news feed or official-source watchdog is required for MVP.
+Ручная / редакционная курация KAFENE.
 
-### Selection
+Для MVP не требуется автоматическая новостная лента или watchdog официальных источников.
 
-Editorial selection using:
-- practical importance;
-- timeliness;
-- broad relevance;
-- confidence that KAFENE has useful destination content.
+### Отбор
 
-Target: 4–6 items.
+Редакционный отбор по критериям:
 
-### Default click target
+- практическая важность;
+- своевременность;
+- широта релевантности;
+- наличие у KAFENE полезной destination page.
 
-A KAFENE collection/hub page.
+Целевой объём:
 
-A large editorial card should not default directly to a Discourse topic.
+- **4–6 тем на один общий редакционный набор**.
 
-### Optional secondary actions
+### Языковая модель
 
-A card may expose separate links to:
-- a canonical guide;
-- a verified change entry;
-- a relevant forum discussion.
+По умолчанию используется **единый редакционный набор**, локализованный на RU/EN.
 
-### Update logic
+Это означает:
 
-Manual editorial update.
+- редакция выбирает сами темы один раз;
+- карточки, summary и destination copy могут иметь RU/EN версии;
+- отдельный второй независимый редакционный набор для английской и русской аудитории не создаётся по умолчанию.
 
-Cards may use validity windows:
+Исключение допустимо, если конкретная тема объективно относится только к одной языковой аудитории.
+
+### Клик
+
+Основной клик ведёт на KAFENE collection / hub page.
+
+Крупная редакционная карточка не должна по умолчанию вести напрямую в Discourse.
+
+### Вторичные действия
+
+Карточка может отдельно ссылаться на:
+
+- канонический гайд;
+- verified change;
+- релевантное форумное обсуждение.
+
+### Обновление
+
+Ручное редакционное обновление.
+
+Карточка может иметь:
+
 - `valid_from`;
 - `valid_until`.
 
 ### Fallback
 
-If no timely editorial items are available, show a smaller evergreen set of
-high-value collections instead of inventing freshness.
+Если своевременных тем нет, показывать уменьшенный evergreen-набор высокополезных collections, а не симулировать свежесть.
 
 ---
 
-## Block 2 — Start here
+## Блок 2 — Начните отсюда
 
-### Purpose
+### Назначение
 
-Help users enter KAFENE through common life journeys rather than forum taxonomy.
+Дать понятную точку входа в типичные жизненные сценарии, а не заставлять пользователя думать в терминах форумной таксономии.
 
-### MVP source
+### Источник в MVP
 
-Curated static/managed journey definitions.
+Курируемые journey definitions.
 
-Initial examples:
-- Moving to Cyprus;
-- Residence permit;
-- Buying a car;
-- Child / school;
-- Starting a company;
-- Buying property.
+Примеры:
 
-### Selection
+- Переезд на Кипр;
+- ВНЖ;
+- Покупка автомобиля;
+- Ребёнок и школа;
+- Открытие компании;
+- Покупка недвижимости.
 
-Stable editorial set.
+### Отбор
 
-This block changes rarely.
+Стабильный редакционный набор.
 
-### Click target
+Этот блок меняется редко.
 
-Dedicated KAFENE journey page.
+### Языковая модель
 
-A journey may link onward to multiple:
-- guides;
+Journey выбирается один раз как продуктовая сущность и локализуется на RU/EN.
+
+### Клик
+
+На отдельную KAFENE journey page.
+
+Journey может собирать:
+
+- гайды;
 - collections;
 - official changes;
-- forum discussions.
+- форумные обсуждения.
 
-### Update logic
+### Обновление
 
-Manual product/editorial maintenance.
+Ручное продуктовое / редакционное обслуживание.
 
 ### Fallback
 
-Keep the stable journey set. Do not replace it with forum categories.
+Сохранять стабильный набор journeys.
+
+Не заменять его форумными категориями.
 
 ---
 
-## Block 3 — Discussed now
+## Блок 3 — Сейчас обсуждают
 
-### Purpose
+### Назначение
 
-Show active community conversations without turning the homepage into a forum
-index.
+Показывать активные разговоры сообщества, не превращая главную страницу в индекс форума.
 
-### MVP source
+### Источник в MVP
 
 Discourse API.
 
-### Candidate inputs
+### Входные сигналы
 
-Use available topic metadata such as:
-- recency;
-- replies;
-- views;
-- unique participants where available;
-- solved/answered state where relevant;
+Можно использовать доступные topic metadata:
+
+- время последней активности;
+- число ответов;
+- просмотры;
+- число уникальных участников, если доступно;
+- solved / answered state, где уместно;
 - optional editorial boost.
 
-### MVP ranking rule
+### Cold start
 
-Use a simple deterministic ranking combining activity and recency.
+До накопления собственной аналитики используется фиксированное детерминированное правило:
 
-Exact weights are implementation detail and should be tuned only after observing
-real traffic.
+1. свежесть последней активности;
+2. число ответов;
+3. число уникальных участников, если доступно.
 
-### Deduplication
+Просмотры и другие traffic-сигналы не должны быть необходимы для day-one ranking.
 
-Do not surface the same underlying subject prominently in both:
-- "What matters now"; and
-- "Discussed now"
+### Дальнейший ranking
 
-unless the duplication is intentional and provides different value.
+После накопления данных веса могут быть скорректированы на основании реального поведения пользователей.
 
-If an editorial card already dominates a topic, prefer another community topic.
+Точная формула является implementation detail, но должна оставаться детерминированной и наблюдаемой.
 
-### Click target
+### Клик
 
-Directly to the Discourse topic.
+Прямо в тему Discourse.
 
-This is the main homepage block where a primary click may intentionally leave the
-KAFENE knowledge surface and enter the forum.
+Это один из блоков, где основной клик намеренно может переводить пользователя с knowledge surface на forum surface.
 
-### Update logic
+### Обновление
 
-Automatic from Discourse API.
+Автоматически через Discourse API.
 
 ### Fallback
 
-If ranking data is unavailable:
-- show latest active discussions;
-- if Discourse is unavailable, hide the block rather than display stale invented
-  activity.
+Если ranking metadata частично недоступны:
+
+- показывать последние активные обсуждения.
+
+Если Discourse полностью недоступен:
+
+- скрывать блок;
+- не показывать устаревшую или синтетическую активность.
 
 ---
 
-## Block 4 — What changed
+## Блок 4 — Что изменилось
 
-### Purpose
+### Назначение
 
-Surface verified official changes that affect practical guidance.
+Показывать verified official changes, которые реально меняют практические правила или содержание гайдов.
 
-This is not generic news.
+Это **не новостной блок**.
 
-### MVP source
+### Источник в MVP
 
-Manual/editorial verified change records.
+Ручные / редакционные verified change records.
 
-Automation of official-source monitoring is explicitly deferred.
+Автоматический мониторинг официальных источников отложен.
 
-### Content rule
+### Что считается change
 
-A change item should represent a verified change in:
-- law;
-- government rule;
-- administrative procedure;
-- form;
-- tariff;
-- filing deadline;
-- official requirement;
-- other authoritative process.
+Запись должна отражать подтверждённое изменение:
 
-### Minimum record
+- закона;
+- государственного правила;
+- административной процедуры;
+- формы;
+- тарифа;
+- дедлайна подачи;
+- официального требования;
+- другой authoritative procedure.
 
-Each change entry should contain:
-- title;
-- short summary;
+### Минимальная структура change record
+
+- `title`;
+- краткое summary;
 - affected guide/topic;
-- effective date where known;
-- detected/published date;
+- `effective_date`, если известна;
+- `detected_at` / `published_at`;
 - source;
 - verification state.
 
-### Selection
+### Как работают даты
 
-Prefer:
-- recent;
-- material;
-- user-relevant;
-- guide-affecting changes.
+Используются две разные временные оси:
 
-### Click target
+- `detected_at` / `published_at` — когда изменение стало известно;
+- `effective_date` — когда оно вступает в силу.
 
-Default:
-- KAFENE change detail / affected guide context.
+Для homepage ranking учитываются обе.
 
-Where useful, link directly to the affected canonical guide.
+Приоритет повышается, если изменение:
 
-### Update logic
+- недавно обнаружено;
+- существенно;
+- скоро вступает в силу или уже вступило;
+- влияет на важный гайд.
 
-Manual/editorial for MVP.
+Будущая дата вступления в силу не делает change «несвежим».
+
+### Отбор
+
+Предпочитать:
+
+- недавние;
+- существенные;
+- пользовательски релевантные;
+- guide-affecting изменения.
+
+### Клик
+
+По умолчанию:
+
+- change detail;
+- либо контекст affected guide.
+
+Если отдельная change page не нужна, можно сразу вести в канонический гайд с блоком «Что изменилось».
+
+### Обновление
+
+Ручное / редакционное в MVP.
 
 ### Fallback
 
-Hide the block if there are no verified current changes.
+Если verified changes нет — скрыть блок.
 
-Do not fill it with general news.
+Не заполнять его general news.
+
+### Языковая модель
+
+Change — одна доменная сущность.
+
+RU/EN версии — локализованные представления одной и той же verified записи, а не две независимые editorial selections.
 
 ---
 
-## Block 5 — Popular guides
+## Блок 5 — Популярные гайды
 
-### Purpose
+### Назначение
 
-Provide direct access to high-utility canonical KAFENE knowledge pages.
+Дать быстрый доступ к наиболее полезным каноническим knowledge pages.
 
-### MVP source
+Это **витрина**, а не полный каталог гайдов.
 
-Managed guide catalogue plus simple usage/editorial signals.
+### Источник в MVP
 
-### Selection
+Managed guide catalogue + редакционный приоритет + минимальная аналитика.
 
-MVP may combine:
+### Отбор
+
+MVP может учитывать:
+
 - editorial priority;
-- page traffic where available;
-- recurring practical demand.
+- реальные открытия гайдов;
+- повторяющийся практический спрос.
 
-### Click target
+### Клик
 
-Standalone KAFENE guide page.
+На самостоятельную guide page KAFENE.
 
-### Update logic
+### Обновление
 
-Mostly automatic from usage once analytics exist, with editorial override.
+На старте — редакционно.
+
+После появления достаточных данных — сочетание usage signals и editorial override.
 
 ### Fallback
 
-Use an editorially curated list of high-value guides.
+Показывать curated list высокополезных гайдов.
 
 ---
 
-## Block 6 — New questions
+## Отдельный раздел — Гайды
 
-### Purpose
+### Назначение
 
-Surface fresh community questions that may need answers.
+Дать пользователю полный структурированный индекс канонической базы знаний KAFENE.
 
-### MVP source
+`Popular guides` отвечает на вопрос:
+
+> Что сейчас чаще всего полезно?
+
+Раздел `/guides` отвечает на вопрос:
+
+> Где найти всю структурированную информацию по теме?
+
+### Точка входа
+
+`Guides` должен быть доступен из глобальной навигации.
+
+Маршрут:
+
+- `/guides`.
+
+### Структура
+
+На MVP гайды группируются по крупным пользовательским доменам, например:
+
+- Иммиграция и ВНЖ;
+- Жильё и недвижимость;
+- Деньги, налоги и банки;
+- Работа и бизнес;
+- Авто и транспорт;
+- Медицина;
+- Семья и образование;
+- Быт и услуги.
+
+Это не обязано один-в-один повторять forum taxonomy.
+
+### Дополнительные измерения
+
+Гайды могут фильтроваться по:
+
+- городу;
+- procedure type;
+- case type;
+- языку.
+
+Например:
+
+- `renewal`;
+- `application`;
+- `rental`;
+- `purchase`;
+- `EU`;
+- `non-EU`;
+- `family`;
+- `tenant`;
+- `property-owner`.
+
+### Клик
+
+Из `/guides` пользователь переходит на самостоятельную guide page.
+
+### Fallback
+
+Даже при отсутствии аналитики каталог `/guides` должен работать как стабильный редакционный индекс.
+
+---
+
+## Блок 6 — Новые вопросы
+
+### Назначение
+
+Показывать свежие пользовательские вопросы, которым могут требоваться ответы.
+
+### Источник в MVP
 
 Discourse API.
 
-### Selection
+### Отбор
 
-Prefer:
-- recent questions;
-- low-answer / unanswered topics;
-- legitimate practical Cyprus questions.
+Предпочитать:
 
-Avoid duplicating the same item already shown in "Discussed now".
+- свежие вопросы;
+- unanswered / low-answer темы;
+- реальные практические вопросы о Кипре.
 
-### Click target
+### Клик
 
-Directly to the Discourse topic.
+Прямо в Discourse topic.
 
-### Update logic
+### Обновление
 
-Automatic from Discourse API.
+Автоматически через Discourse API.
 
 ### Fallback
 
-Hide if no suitable fresh questions exist.
+Скрывать блок, если подходящих свежих вопросов нет.
 
 ---
 
-## Block 7 — Cities
+## Блок 7 — Города
 
-### Purpose
+### Назначение
 
-Provide geographic entry points without creating separate city forums.
+Дать географические точки входа, не создавая отдельные городские форумы.
 
-### Product rule
+### Продуктовое правило
 
-A city is a content dimension, not a separate forum taxonomy.
+Город — это content dimension / scope, а не отдельная forum taxonomy.
 
-Dedicated URLs such as:
+Допускаются отдельные индексируемые маршруты:
+
 - `/limassol`;
 - `/nicosia`;
 - `/larnaca`;
-- `/paphos`;
+- `/paphos`.
 
-may exist as city-scoped landing pages.
+### MVP-взаимодействие
 
-### MVP interaction
+Клик по городу открывает city-scoped landing page KAFENE.
 
-Clicking a city opens a KAFENE city landing page.
+Она может собирать из общей продуктовой модели:
 
-The page may compose city-scoped content from the same product model, for
-example:
-- relevant guides;
-- relevant discussions;
+- релевантные гайды;
+- релевантные обсуждения;
 - verified local changes;
-- later local News.
+- позднее — local News.
 
-### Important boundary
+### Граница
 
-This draft does **not** finalize the exact city module set.
+Точный набор city modules пока не фиксируется окончательно.
 
-City-specific businesses/services remain deferred and must not be smuggled into
-the MVP homepage implementation.
+City-specific businesses/services остаются deferred и не должны незаметно попасть в homepage MVP.
 
-### Forum rule
+### Форум
 
-A city landing page does not create a parallel city forum.
+City landing page не создаёт отдельный городской форум.
 
-Forum discussions remain in the shared Discourse community and may be tagged or
-associated with city metadata.
+Forum topics остаются в общей Discourse community и могут иметь city metadata / tags.
 
 ---
 
-## Forum entry
+## Явная точка входа в форум
 
-The homepage must include an explicit route to the full forum/community surface.
+На главной должен быть заметный маршрут в полноценную community surface.
 
-Forum access should be visible, but the homepage should not behave like a skin
-over Discourse.
+Возможные варианты:
 
-Possible labels:
-- Forum;
-- All discussions;
-- Ask the community.
+- Форум;
+- Все обсуждения;
+- Спросить сообщество.
 
-Exact copy is a UI decision.
+Точная формулировка — UI decision.
+
+Главная при этом не должна выглядеть как skin поверх Discourse.
 
 ---
 
-## Collection / hub interaction model
+## Модель collection / hub
 
-Large editorial cards default to KAFENE collection/hub pages.
+Крупные редакционные карточки по умолчанию ведут на KAFENE collection / hub page.
 
-Example:
+Пример:
 
-`Tax 2026`
+`Налоги 2026`
 
-Hub may contain:
-- short current summary;
-- canonical guides;
+Hub может содержать:
+
+- короткое актуальное summary;
+- канонические гайды;
 - verified changes;
-- current forum discussions;
-- source/freshness information;
-- later Ask KAFENE entrypoint.
+- текущие обсуждения;
+- source / freshness information;
+- позднее — Ask KAFENE entrypoint.
 
-This avoids forcing one editorial concept into either:
-- one guide; or
-- one forum topic.
+Это позволяет одной важной теме не быть искусственно сведённой к одному гайду или одной теме форума.
 
 ---
 
-## Guide interaction model
+## Модель guide page
 
-A KAFENE guide is a standalone knowledge page.
+Гайд — самостоятельная knowledge page KAFENE.
 
-A guide may show:
-- current answer;
-- last verified;
-- sources;
-- requirements;
-- steps;
-- cost/timing where applicable;
+Гайд может показывать:
+
+- текущий ответ;
+- `last_verified`;
+- источники;
+- требования;
+- шаги;
+- стоимость / сроки, где применимо;
 - verified recent changes;
-- relevant community discussion link.
+- ссылку на релевантное обсуждение сообщества.
 
-Forum discussion is contextual supporting experience, not the guide body.
-
----
-
-## Cross-surface linking rules
-
-### Website -> Forum
-
-Use when:
-- community experience adds value;
-- users may want edge cases;
-- users may want to ask follow-up questions.
-
-### Forum -> Website
-
-Use when:
-- a canonical guide exists;
-- an official/current answer should be visible;
-- a discussion risks repeating outdated procedural advice.
-
-### Default principle
-
-Knowledge pages remain primary for canonical practical guidance.
-Forum remains primary for lived experience and discussion.
+Forum discussion — contextual community experience, а не тело гайда.
 
 ---
 
-## Homepage card model
+## Связи между сайтом и форумом
 
-MVP editorial cards may use:
+### Сайт → Форум
 
-- `title`
-- `subtitle`
-- `type`
-- `language`
-- `priority`
-- `status`
-- `image_or_icon`
-- `destination`
-- `related_guide_ids`
-- `related_topic_ids`
-- `city`
-- `valid_from`
-- `valid_until`
-- `manual_boost`
+Использовать, когда:
 
-This is a product-level field model, not yet a required database schema.
+- полезен реальный пользовательский опыт;
+- важны edge cases;
+- пользователь хочет задать уточняющий вопрос.
 
-Do not create a persistence layer solely because this document lists fields.
+### Форум → Сайт
 
----
+Использовать, когда:
 
-## Homepage deduplication rules
+- существует canonical guide;
+- нужен authoritative/current answer;
+- обсуждение рискует повторять устаревшую процедуру.
 
-1. Do not show the same destination twice in adjacent homepage blocks.
-2. If "What matters now" contains a major topic, suppress near-duplicate
-   "Discussed now" items unless community discussion adds distinct value.
-3. "New questions" should not repeat topics already chosen for "Discussed now".
-4. "What changed" should not duplicate generic news treatment; it exists only for
-   verified official changes.
-5. Multiple blocks may reference the same broad subject only when their role is
-   clearly different.
+### Базовый принцип
+
+Knowledge pages первичны для канонической практической информации.
+
+Forum первичен для lived experience, обсуждений и edge cases.
 
 ---
 
-## Freshness / provenance rules
+## Единый сквозной dedup главной страницы
 
-MVP must not imply automated freshness where none exists.
+Dedup выполняется **между всеми homepage blocks**, а не только попарно.
 
-For editorial knowledge/change content, show provenance/freshness only when
-known, for example:
-- last verified;
+### Базовое правило
+
+Один и тот же destination или один и тот же content item не должен бессмысленно повторяться в нескольких блоках.
+
+### Topic-level dedup
+
+Широкая тема может появляться в нескольких блоках только если блоки выполняют разные функции.
+
+Пример:
+
+- Block 1: `Налоги 2026` как editorial hub;
+- Block 6: `Когда дедлайн по налогу 2026?` как конкретный новый вопрос.
+
+Это допустимо, если новый вопрос добавляет отдельную community value.
+
+Недопустимо, если Block 6 фактически повторяет ту же информацию и не даёт отдельной пользовательской причины для клика.
+
+### Приоритет
+
+При конфликте:
+
+1. editorial / canonical destination;
+2. verified change;
+3. active discussion;
+4. new question.
+
+Низкоприоритетный элемент подавляется, если он не добавляет отличающуюся функцию.
+
+### Дополнительные правила
+
+- `New questions` не повторяет тот же topic, уже выбранный в `Сейчас обсуждают`.
+- `Что изменилось` не заменяется общими новостями.
+- одинаковый destination не показывается дважды рядом.
+- topic cluster может появиться повторно только при различии роли.
+
+---
+
+## Поведение страницы при одновременных отказах
+
+Главная должна делать normal reflow.
+
+### Правила layout degradation
+
+- скрытый блок полностью удаляется из потока;
+- пустые placeholders и визуальные дыры не сохраняются;
+- соседние секции поднимаются вверх;
+- порядок оставшихся блоков сохраняется;
+- страница не показывает пустые заголовки секций.
+
+### Минимально полезная главная
+
+Даже если одновременно недоступны:
+
+- `Сейчас обсуждают`;
+- `Что изменилось`;
+- `Новые вопросы`;
+
+главная должна оставаться содержательно полезной за счёт:
+
+1. Hero / поиска;
+2. `Что важно сейчас` или его evergreen fallback;
+3. `Начните отсюда`;
+4. `Популярные гайды`;
+5. перехода в `/guides`;
+6. навигации в города и форум.
+
+### Полный отказ Discourse
+
+При полном отказе Discourse:
+
+- forum-driven blocks скрываются;
+- static/editorial knowledge surface продолжает работать;
+- явная forum navigation может оставаться доступной, но не должна имитировать live activity.
+
+---
+
+## Модель homepage card
+
+Homepage card — это **presentation/view model**, а не универсальная доменная сущность.
+
+Она может представлять:
+
+- collection;
+- guide;
+- journey;
+- change;
+- forum topic;
+- city landing.
+
+Минимальные presentation fields:
+
+- `title`;
+- `subtitle`;
+- `type`;
+- `language`;
+- `priority`;
+- `status`;
+- `image_or_icon`;
+- `destination`;
+- `related_guide_ids`;
+- `related_topic_ids`;
+- `city`;
+- `valid_from`;
+- `valid_until`;
+- `manual_boost`.
+
+Эта модель не является обязательной схемой БД.
+
+Не создавать persistence layer только потому, что здесь перечислены поля.
+
+---
+
+## Change record и card model
+
+`Change record` и `homepage card` — **разные сущности**.
+
+- Change record хранит доменные данные об официальном изменении.
+- Homepage card лишь отображает эту сущность на конкретной поверхности.
+
+Один change record может:
+
+- показываться карточкой на главной;
+- быть связан с guide;
+- иметь собственную detail page;
+- вообще не попадать на главную.
+
+Не нужно натягивать change schema на generic card schema.
+
+---
+
+## Freshness и provenance
+
+MVP не должен обещать автоматическую свежесть там, где её нет.
+
+Для editorial knowledge/change content показывать только реально известные признаки:
+
+- `last_verified`;
 - effective date;
 - source link;
 - verification state.
 
-Forum activity timestamps come from Discourse.
+Forum timestamps берутся из Discourse.
 
-Do not label content "current" merely because it is recently published.
-
----
-
-## Language behavior
-
-The homepage supports separate EN/RU presentation.
-
-MVP principle:
-- interface/content may be localized;
-- forum communities remain separate EN/RU trees;
-- homepage should not merge EN/RU discussions into one mixed feed by default.
-
-Cross-language semantic retrieval remains a separate capability and does not
-change homepage community-tree separation.
+Не маркировать материал как «актуальный» только потому, что он недавно опубликован.
 
 ---
 
-## MVP data dependencies
+## Языковое поведение
 
-The homepage may depend only on:
+### Editorial knowledge
+
+По умолчанию используется единый editorial selection, локализованный на RU/EN.
+
+Это относится к:
+
+- `Что важно сейчас`;
+- `Начните отсюда`;
+- `Что изменилось`;
+- curated `Популярные гайды`.
+
+Это уменьшает расхождение между языковыми версиями продукта и не удваивает редакционную работу.
+
+### Forum
+
+EN и RU community trees остаются раздельными.
+
+Homepage не должен по умолчанию смешивать RU и EN discussions в одну ленту.
+
+### Исключения
+
+Допускаются language-specific editorial items, если тема объективно относится только к одной языковой аудитории.
+
+### Cross-language retrieval
+
+Cross-language semantic retrieval остаётся отдельной capability и не меняет правило разделения community feeds.
+
+---
+
+## Минимальная аналитика MVP
+
+Минимальный event logging входит в MVP.
+
+Без этого невозможно осмысленно настраивать ranking и Popular Guides позже.
+
+### Минимальные события
+
+- `page_view`;
+- `search_submit`;
+- `homepage_card_click`;
+- `guide_open`;
+- `journey_open`;
+- `forum_topic_open`;
+- `city_open`;
+- `guides_index_open`.
+
+### Минимальные свойства
+
+Где применимо:
+
+- timestamp;
+- language;
+- route;
+- block;
+- content/item id;
+- destination type.
+
+### Граница
+
+MVP не требует сложной analytics platform.
+
+Достаточно надёжного event log / простой аналитики, чтобы позднее:
+
+- настраивать ranking;
+- видеть usage guides;
+- оценивать click-through блоков;
+- не принимать решения вслепую.
+
+---
+
+## Допустимые data dependencies MVP
+
+Главная может зависеть только от:
 
 1. editorial/manual KAFENE content;
 2. managed/static guide and journey content;
 3. Discourse API;
-4. simple analytics if available.
+4. минимального event logging / analytics.
 
-The homepage MVP does **not** depend on:
+Главная MVP **не зависит** от:
+
 - automated news aggregation;
 - official-source polling/diffing;
-- external vector database;
+- внешней vector database;
 - custom Ask KAFENE;
 - Jev;
 - autonomous content generation.
 
 ---
 
-## Failure behavior
+## Общий failure behavior
 
-The homepage should degrade gracefully.
+Страница должна graceful degrade.
 
-- Editorial blocks: use curated fallback or hide.
-- Discourse blocks: hide if API unavailable.
-- Search: remains the primary stable interaction.
-- Do not substitute synthetic "live" data to make the page look populated.
+- Editorial blocks: curated fallback или hide.
+- Discourse blocks: hide при недоступности API.
+- Hero/search: остаётся основной стабильной interaction.
+- Layout: reflow без пустых секций.
+- Не подставлять synthetic live data ради визуального наполнения.
 
 ---
 
-## Explicitly deferred
+## Явно deferred
 
-Not part of this MVP model:
+Не входят в эту MVP-модель:
 
-- RSS/news ingestion;
+- RSS / news ingestion;
 - cross-outlet event deduplication;
 - automated news summarization;
 - official-source watchdog;
-- automated change detection/diff;
+- automated change detection / diff;
 - automated guide patching;
-- custom Ask KAFENE answer orchestration;
+- custom Ask KAFENE orchestration;
 - Jev reranking;
 - city business/service directory;
-- final personalization for returning users.
+- advanced personalization для returning users.
 
 ---
 
-## Open decisions
+## Открытые решения
 
-Still unresolved after this draft:
+После этой версии остаются открытыми:
 
-1. exact city landing-page module set;
-2. exact deterministic ranking formula for "Discussed now";
-3. exact CMS/content-storage implementation for guides, journeys and editorial
-   cards;
-4. exact frontend stack;
-5. whether returning users later receive adaptive homepage ordering.
+1. точный набор модулей city landing page;
+2. точные веса production ranking для `Сейчас обсуждают` после накопления данных;
+3. CMS / content-storage implementation для guides, journeys и editorial content;
+4. frontend stack;
+5. будущая адаптивная персонализация returning users.
 
-These are not blockers for agreeing the MVP interaction model itself.
+Следующие вопросы **больше не считаются открытыми** в рамках этого draft:
 
-## Acceptance condition
+- языковая модель editorial blocks: единый editorial selection + RU/EN localization;
+- cold-start ranking: deterministic recency/activity rule;
+- минимальная аналитика: входит в MVP;
+- change record и homepage card: отдельные сущности;
+- page-wide fallback: normal reflow + минимально полезная static/editorial surface.
 
-This document becomes CANONICAL only after explicit review/acceptance.
+---
 
-Until then, it is an ACTIVE DRAFT and must not silently override
-`docs/00-DECISIONS.md` or `docs/STATUS.md`.
+## Условие принятия
+
+Документ может стать `CANONICAL` только после явного review/acceptance.
+
+Перед переводом в `CANONICAL` необходимо выполнить отдельную проверку:
+
+1. сверить документ с `PROJECT_RULES.md`;
+2. сверить с `docs/00-DECISIONS.md`;
+3. сверить с `docs/STATUS.md`;
+4. сверить статус и роль документа в `docs/00-DOCS-INVENTORY.md`;
+5. убедиться, что draft не вводит решение, противоречащее более высокому source of truth;
+6. либо устранить конфликт, либо сначала обновить соответствующее higher-authority decision/status.
+
+До этого документ остаётся `ACTIVE DRAFT`.
