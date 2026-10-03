@@ -1,6 +1,14 @@
 # Discourse Feasibility Spike
 
-Status: **planned / partially prepared**
+Status: **RESEARCH INPUT — historical completed spike protocol**
+
+> Historical context: this document records the protocol and candidate architecture
+> that were tested during the Discourse feasibility phase. The spike has been
+> completed. Current product/architecture authority lives in
+> `PROJECT_RULES.md`, `docs/00-DECISIONS.md`, `docs/STATUS.md`, and current
+> canonical product specifications. Do not treat the candidate architecture,
+> pass criteria, or pre-spike assumptions below as current product decisions.
+> Measured results are recorded in `docs/research/DISCOURSE-SPIKE-RESULTS.md`.
 
 ## Purpose
 
@@ -145,7 +153,10 @@ Verify read/write round-trip for:
 - `source_status`;
 - `paired_topic_id`.
 
-## Pass criteria
+## Historical pass criteria
+
+These criteria belonged to the completed feasibility experiment. They do not
+define the current KAFENE architecture.
 
 ### PASS
 
@@ -186,12 +197,10 @@ Do not:
 
 ## Output
 
-Results go to:
+Measured results are recorded in:
 
 `docs/research/DISCOURSE-SPIKE-RESULTS.md`
 
-Only after evidence exists should:
-
-`docs/architecture/ADR-001-FORUM-ENGINE.md`
-
-be moved from Proposed to Accepted.
+The spike is complete. Product and architecture decisions derived from the
+evidence are recorded separately in `docs/00-DECISIONS.md`. ADR-001 remains a
+draft requiring rewrite and must not be promoted based on this protocol alone.
