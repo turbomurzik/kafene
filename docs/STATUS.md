@@ -1,26 +1,31 @@
 # KAFENE Status
 
-**Status:** CURRENT
+**Status:** CANONICAL
 
 This file is the current-state dashboard. It is not a diary and should be
 updated only when project state materially changes.
 
 ## Current phase
 
-**Product architecture consolidation before frontend implementation.**
+**Architecture closure before frontend implementation.**
 
-The Discourse feasibility work has produced enough evidence to retain Discourse
-as the community/forum substrate, but the earlier "Discourse as forum + guide
-CMS + Ask AI knowledge core" model is no longer the accepted product shape.
+The Discourse feasibility work is complete. KAFENE retains Discourse as the
+community/forum substrate, while the public website owns editorial knowledge
+surfaces such as guides, journeys, collections/hubs, and verified Changes.
+
+The earlier "Discourse as forum + guide CMS + Ask AI knowledge core" model is no
+longer the accepted product shape.
 
 ## Accepted baseline
 
-- KAFENE is Cyprus-first in deployment, but the product core is domain-agnostic and portable across markets.
-- Market-specific country/state/city, languages, categories, currency, pricing and regulatory rules belong in deployment configuration.
+- KAFENE is Cyprus-first in deployment, but the product core is domain-agnostic
+  and portable across markets.
+- Market-specific country/state/city, languages, categories, currency, pricing,
+  local sources, and regulatory rules belong in deployment configuration.
 - KAFENE is knowledge-first and community-backed.
 - KAFENE website/knowledge layer and Discourse forum are separate connected
   surfaces.
-- Guides, collections/hubs, journeys and official-change content belong on the
+- Guides, collections/hubs, journeys, and official-change content belong on the
   KAFENE website.
 - Forum discussions and community experience belong in Discourse.
 - Multilingual Discourse semantic retrieval is validated.
@@ -28,7 +33,11 @@ CMS + Ask AI knowledge core" model is no longer the accepted product shape.
 - "Changes" means verified official-rule/procedure/source changes.
 - "News" is a separate current-events layer.
 - Automated News/Changes pipelines are not current MVP blockers.
-- Monetization preserves free canonical knowledge and is built around Business / Offer / Lead, sponsorship, subscriptions and affiliate/CPA where locally appropriate.
+- Monetization preserves free canonical knowledge and is built around Business /
+  Offer / Lead, sponsorship, subscriptions, and affiliate/CPA where locally
+  appropriate.
+- The reconciled product requirements define the current first-useful-release
+  scope but remain an ACTIVE DRAFT until explicitly promoted.
 
 See `docs/00-DECISIONS.md` for exact accepted decisions.
 
@@ -45,27 +54,42 @@ See `docs/00-DECISIONS.md` for exact accepted decisions.
   - `docs/00-DECISIONS.md`
   - `docs/00-DOCS-INVENTORY.md`
   - documentation/execution discipline standards.
+- IA research reconciled and registered as RESEARCH INPUT.
+- `docs/product/PRODUCT-REQUIREMENTS.md` reconciled against the accepted
+  website/forum split, portable-core decisions, and canonical HOME interaction
+  model.
+- operational execution-discipline adoption reconciled with current governance.
+- historical Discourse spike and engine-comparison documents marked explicitly
+  as historical research inputs.
 
-## Active documentation debt
+## Active documentation / architecture debt
 
-The following are not current canonical architecture and require later
-reconciliation:
+The following still require architecture closure or later reconciliation:
 
-- `docs/product/PRODUCT-REQUIREMENTS.md`
-- `docs/architecture/ADR-001-FORUM-ENGINE.md`
-- `docs/research/ENGINE-COMPARISON.md` (historical research input)
+- `docs/architecture/ADR-001-FORUM-ENGINE.md` — stale in part and must be
+  rewritten or superseded before acceptance.
+- production website↔Discourse integration contract / ADR.
+- frontend/runtime architecture decision.
+- website CMS/content-storage and editorial workflow decision.
+- exact search architecture across website and forum content.
+- broader domain/integration semantics for `topic_space_id`.
+- production IA mapping after separate validation.
 
-Do not treat them as higher authority than accepted decisions.
+Historical research documents remain preserved as research/evidence and are not
+current architecture authority.
 
 ## Current active task
 
-**Reconcile the PRD against the canonical HOME INTERACTION MODEL and the monetization model.**
+**Architecture closure.**
 
-Current product specs:
+Current product documents:
+
 - `docs/product/HOME-INTERACTION-MODEL.md` — CANONICAL
+- `docs/product/PRODUCT-REQUIREMENTS.md` — ACTIVE DRAFT, reconciled current PRD
 - `docs/product/MONETIZATION-MODEL.md` — ACTIVE DRAFT
 
-The draft covers only current MVP sources/mechanics and keeps future automation outside present implementation.
+The next work should close the stale forum-engine ADR and define the
+website↔Discourse architecture boundary before frontend implementation.
 
 ## Deferred / not active
 
@@ -76,26 +100,36 @@ The draft covers only current MVP sources/mechanics and keeps future automation 
 - Jev reranking;
 - production-like living-knowledge automation;
 - final city-specific services/business layer;
-- ADR-001 acceptance in its current wording.
+- exact Cyprus pricing/package implementation;
+- multi-deployment administration UI.
 
-## Open product decisions
+## Open product / architecture decisions
 
-- exact pricing/package assumptions in the monetization model;
-- exact city landing/filter semantics and module set;
+- final replacement/rewrite of ADR-001;
+- production website↔Discourse integration contract;
 - production frontend/site technology;
 - exact content-management model for standalone KAFENE guides;
+- exact search architecture;
+- exact city landing/filter semantics and module set;
+- production IA mapping after validation;
+- broader use/persistence semantics for `topic_space_id`;
+- exact pricing/package assumptions in the monetization model;
 - later Ask KAFENE architecture.
 
 ## Next authorized step
 
-Reconcile `docs/product/PRODUCT-REQUIREMENTS.md` against the canonical HOME INTERACTION MODEL, accepted portable-core decisions, and the current MONETIZATION MODEL draft.
+Rewrite or supersede `docs/architecture/ADR-001-FORUM-ENGINE.md` so it reflects
+the accepted website/forum separation and no longer proposes Discourse as the
+whole-product knowledge core.
 
-Do **not** in the same task:
-- implement News automation;
-- implement Changes monitoring;
+Keep that task bounded. Do **not** in the same task:
+
+- choose the frontend stack;
+- choose the CMS/content-storage implementation;
+- implement website↔Discourse integration;
+- implement News or Changes automation;
 - implement custom Ask KAFENE;
 - revive Jev;
-- accept ADR-001;
-- expand the scope into a full frontend build.
+- expand the scope into a frontend build.
 
 If the user explicitly changes priority, update this file accordingly.
