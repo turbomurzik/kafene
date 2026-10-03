@@ -16,7 +16,7 @@ This inventory is the registry of durable project documentation. A file being ne
 | `docs/00-DOCS-INVENTORY.md` | CANONICAL | Registry and status of durable docs. |
 | `docs/product/PRODUCT-REQUIREMENTS.md` | ACTIVE DRAFT | Needs reconciliation with separate website/forum architecture before becoming canonical. |
 | `docs/research/DISCOURSE-FEASIBILITY-SPIKE.md` | RESEARCH INPUT | Historical spike protocol. Its old candidate architecture is not current product architecture. |
-| `docs/research/DISCOURSE-SPIKE-RESULTS.md` | EVIDENCE | Measured live Discourse/AI results. Factual evidence, not a product decision by itself. Note: some header/template fields are stale and require a reconciliation pass. |
+| `docs/research/DISCOURSE-SPIKE-RESULTS.md` | EVIDENCE | Measured live Discourse/AI results. Factual evidence, not a product decision by itself; reconciled to the completed spike evidence. |
 | `docs/research/ENGINE-COMPARISON.md` | RESEARCH INPUT | Pre-spike Discourse vs XenForo research; live evidence takes precedence where available. |
 | `docs/research/JEV-RERANKING-SPIKE.md` | DEFERRED | Future reranking research hypothesis. Not current architecture. |
 | `docs/architecture/ADR-001-FORUM-ENGINE.md` | ACTIVE DRAFT | Proposed ADR, stale in part after website/forum separation; must be rewritten before acceptance. |
