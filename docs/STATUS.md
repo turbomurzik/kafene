@@ -60,19 +60,20 @@ See `docs/00-DECISIONS.md` for exact accepted decisions.
   model.
 - operational execution-discipline adoption reconciled with current governance.
 - historical Discourse spike and engine-comparison documents marked explicitly
-  as historical research inputs.
+  as historical research inputs;
+- ADR-001 принят как CANONICAL boundary contract между website и Discourse.
 
-## Active documentation / architecture debt
+## Активный архитектурный долг
 
-The following still require architecture closure or later reconciliation:
+ADR-001 принят и больше не является открытым долгом.
 
-- `docs/architecture/ADR-001-FORUM-ENGINE.md` — stale in part and must be
-  rewritten or superseded before acceptance.
-- production website↔Discourse integration contract / ADR.
-- frontend/runtime architecture decision.
-- website CMS/content-storage and editorial workflow decision.
-- exact search architecture across website and forum content.
-- broader domain/integration semantics for `topic_space_id`.
+До frontend implementation остаются:
+
+- production website↔Discourse integration contract;
+- frontend/runtime architecture decision;
+- website CMS/content-storage и editorial workflow decision;
+- exact search architecture across website and forum content;
+- broader domain/integration semantics for `topic_space_id`;
 - production IA mapping after separate validation.
 
 Historical research documents remain preserved as research/evidence and are not
@@ -88,8 +89,8 @@ Current product documents:
 - `docs/product/PRODUCT-REQUIREMENTS.md` — ACTIVE DRAFT, reconciled current PRD
 - `docs/product/MONETIZATION-MODEL.md` — ACTIVE DRAFT
 
-The next work should close the stale forum-engine ADR and define the
-website↔Discourse architecture boundary before frontend implementation.
+ADR-001 принят как CANONICAL. Следующая активная архитектурная задача —
+production website↔Discourse integration contract.
 
 ## Deferred / not active
 
@@ -105,7 +106,6 @@ website↔Discourse architecture boundary before frontend implementation.
 
 ## Open product / architecture decisions
 
-- final replacement/rewrite of ADR-001;
 - production website↔Discourse integration contract;
 - production frontend/site technology;
 - exact content-management model for standalone KAFENE guides;
@@ -116,20 +116,19 @@ website↔Discourse architecture boundary before frontend implementation.
 - exact pricing/package assumptions in the monetization model;
 - later Ask KAFENE architecture.
 
-## Next authorized step
+## Следующий разрешённый шаг
 
-Rewrite or supersede `docs/architecture/ADR-001-FORUM-ENGINE.md` so it reflects
-the accepted website/forum separation and no longer proposes Discourse as the
-whole-product knowledge core.
+Определить production website↔Discourse integration contract поверх принятого
+ADR-001.
 
-Keep that task bounded. Do **not** in the same task:
+Задачу держать узкой. В этом же проходе не:
 
-- choose the frontend stack;
-- choose the CMS/content-storage implementation;
-- implement website↔Discourse integration;
-- implement News or Changes automation;
-- implement custom Ask KAFENE;
-- revive Jev;
-- expand the scope into a frontend build.
+- выбирать frontend stack;
+- выбирать CMS/content-storage implementation;
+- реализовывать integration;
+- реализовывать News или Changes automation;
+- реализовывать custom Ask KAFENE;
+- возвращать Jev;
+- расширять scope до frontend build.
 
 If the user explicitly changes priority, update this file accordingly.
