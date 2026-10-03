@@ -6,10 +6,12 @@ This inventory is the registry of durable project documentation. A file being ne
 
 | Document | Status | Role / authority |
 |---|---|---|
-| `README.md` | CANONICAL ENTRYPOINT | Short repository overview; subordinate to the docs hierarchy. |
+| `PROJECT_RULES.md` | CANONICAL GOVERNANCE | Single source of truth for repository governance and source-of-truth hierarchy. |
+| `README.md` | CANONICAL ENTRYPOINT | Short repository overview; subordinate to `PROJECT_RULES.md`. |
 | `AGENTS.md` | OPERATIONS | Agent entry instructions. |
 | `CLAUDE.md` | OPERATIONS | Claude entry instructions. |
-| `docs/00-START-HERE.md` | CANONICAL | Documentation hierarchy and reading order. |
+| `docs/00-START-HERE.md` | CANONICAL ONBOARDING | Human-readable onboarding; subordinate to `PROJECT_RULES.md`. |
+| `docs/STATUS.md` | CURRENT | Current phase, active task, deferred work and next authorized step; not a diary. |
 | `docs/00-DECISIONS.md` | CANONICAL | Accepted product/architecture decisions. |
 | `docs/00-DOCS-INVENTORY.md` | CANONICAL | Registry and status of durable docs. |
 | `docs/product/PRODUCT-REQUIREMENTS.md` | ACTIVE DRAFT | Needs reconciliation with separate website/forum architecture before becoming canonical. |
@@ -27,11 +29,12 @@ This inventory is the registry of durable project documentation. A file being ne
 
 ## Current canonical set
 
-For product/architecture decisions, the current canonical set is deliberately small:
+For repository/product governance, the current control set is deliberately small:
 
-1. `docs/00-START-HERE.md`
-2. `docs/00-DECISIONS.md`
-3. `docs/00-DOCS-INVENTORY.md`
+1. `PROJECT_RULES.md`
+2. `docs/STATUS.md`
+3. `docs/00-DECISIONS.md`
+4. `docs/00-DOCS-INVENTORY.md`
 
 There is not yet a canonical HOME INTERACTION MODEL, final PRD, final frontend architecture or final Ask KAFENE architecture. Do not invent one by treating a research note as accepted.
 
