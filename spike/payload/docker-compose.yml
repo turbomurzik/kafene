@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kafene_payload_spike
+      POSTGRES_USER: kafene
+      POSTGRES_PASSWORD: kafene
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kafene -d kafene_payload_spike"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - kafene_payload_spike_pg:/var/lib/postgresql/data
+
+volumes:
+  kafene_payload_spike_pg:

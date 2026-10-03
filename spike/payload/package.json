@@ -1,0 +1,16 @@
+{
+  "name": "kafene-payload-spike",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "spike": "NODE_ENV=development tsx src/run-spike.ts"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "3.90.2",
+    "payload": "3.90.2"
+  },
+  "devDependencies": {
+    "tsx": "4.20.6",
+    "typescript": "5.9.2"
+  }
+}
