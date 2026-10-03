@@ -120,7 +120,9 @@ Never fill an unrun section with assumptions to make a document look complete.
 
 Current accepted baseline:
 
-- KAFENE is Cyprus-first, knowledge-first and community-backed;
+- KAFENE is Cyprus-first in deployment, but its product core is domain-agnostic and portable across markets;
+- the core must separate reusable product entities/mechanics from deployment-specific country/state/city, language, currency, category, brand, pricing and regulatory configuration;
+- KAFENE is knowledge-first and community-backed;
 - the KAFENE website/knowledge layer and Discourse forum are separate connected
   product surfaces;
 - Discourse is retained for community/forum capabilities and multilingual
@@ -130,7 +132,8 @@ Current accepted baseline:
 - native Discourse Ask AI is not the production Ask KAFENE answer layer;
 - News and Changes are distinct concepts;
 - automated News, automated Changes, custom Ask KAFENE and Jev are deferred from
-  the current MVP implementation path unless explicitly reactivated.
+  the current MVP implementation path unless explicitly reactivated;
+- monetization preserves free canonical knowledge and is designed around high-intent commercial actions using portable primitives such as Business, Offer and Lead.
 
 Exact accepted decisions remain authoritative in `docs/00-DECISIONS.md`.
 
