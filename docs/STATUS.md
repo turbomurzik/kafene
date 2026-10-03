@@ -59,11 +59,11 @@ Do not treat them as higher authority than accepted decisions.
 
 ## Current active task
 
-**Review the MVP HOME INTERACTION MODEL and MONETIZATION MODEL drafts, then reconcile the PRD.**
+**Reconcile the PRD against the canonical HOME INTERACTION MODEL and the monetization model.**
 
-Drafts:
-- `docs/product/HOME-INTERACTION-MODEL.md`
-- `docs/product/MONETIZATION-MODEL.md`
+Current product specs:
+- `docs/product/HOME-INTERACTION-MODEL.md` — CANONICAL
+- `docs/product/MONETIZATION-MODEL.md` — ACTIVE DRAFT
 
 The draft covers only current MVP sources/mechanics and keeps future automation outside present implementation.
 
@@ -80,7 +80,6 @@ The draft covers only current MVP sources/mechanics and keeps future automation 
 
 ## Open product decisions
 
-- explicit acceptance of the current HOME INTERACTION MODEL draft;
 - exact pricing/package assumptions in the monetization model;
 - exact city landing/filter semantics and module set;
 - production frontend/site technology;
@@ -89,7 +88,7 @@ The draft covers only current MVP sources/mechanics and keeps future automation 
 
 ## Next authorized step
 
-Review `docs/product/HOME-INTERACTION-MODEL.md` and `docs/product/MONETIZATION-MODEL.md`. Then reconcile `docs/product/PRODUCT-REQUIREMENTS.md` against the accepted portable-core, homepage and monetization decisions.
+Reconcile `docs/product/PRODUCT-REQUIREMENTS.md` against the canonical HOME INTERACTION MODEL, accepted portable-core decisions, and the current MONETIZATION MODEL draft.
 
 Do **not** in the same task:
 - implement News automation;
