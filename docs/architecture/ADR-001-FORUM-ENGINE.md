@@ -1,6 +1,6 @@
 # ADR-001: Community Substrate и граница Website ↔ Discourse
 
-Статус: **ACTIVE DRAFT**
+Статус: **CANONICAL**
 
 Дата исходного ADR: 2026-09-26  
 Переписан после завершения Discourse feasibility spike и принятия DEC-002/003/004/009.
@@ -313,11 +313,10 @@ HOME INTERACTION MODEL: скрываться, использовать допу�
 
 ## Статус принятия
 
-Этот документ остаётся **ACTIVE DRAFT**.
+Этот ADR принят как **CANONICAL**.
 
-Он может быть переведён в CANONICAL только после явного принятия пользователем и
-обновления `docs/00-DECISIONS.md`, `docs/STATUS.md` и
-`docs/00-DOCS-INVENTORY.md`.
+Канонический статус зафиксирован через DEC-010 и отражён в
+`docs/STATUS.md` и `docs/00-DOCS-INVENTORY.md`.
 
 Исходная версия ADR-001 была только PROPOSED и никогда не была принята, поэтому
-она переписывается на месте, а не supersede отдельным ADR-002.
+она была переписана на месте, а не supersede отдельным ADR-002.
