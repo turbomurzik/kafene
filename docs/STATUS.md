@@ -56,10 +56,11 @@ Do not treat them as higher authority than accepted decisions.
 
 ## Current active task
 
-**Define the MVP HOME INTERACTION MODEL after governance cleanup.**
+**Review and accept the MVP HOME INTERACTION MODEL draft.**
 
-The model should cover only current MVP sources/mechanics and should not smuggle
-future automation into present implementation.
+Draft: `docs/product/HOME-INTERACTION-MODEL.md`.
+
+The draft covers only current MVP sources/mechanics and keeps future automation outside present implementation.
 
 ## Deferred / not active
 
@@ -74,7 +75,7 @@ future automation into present implementation.
 
 ## Open product decisions
 
-- exact HOME INTERACTION MODEL;
+- explicit acceptance of the current HOME INTERACTION MODEL draft;
 - exact city landing/filter semantics and module set;
 - production frontend/site technology;
 - exact content-management model for standalone KAFENE guides;
@@ -82,7 +83,7 @@ future automation into present implementation.
 
 ## Next authorized step
 
-Create/reconcile the MVP HOME INTERACTION MODEL as the next product-spec task.
+Review `docs/product/HOME-INTERACTION-MODEL.md`. If accepted, promote it to CANONICAL and then reconcile `docs/product/PRODUCT-REQUIREMENTS.md` against it.
 
 Do **not** in the same task:
 - implement News automation;
