@@ -8,9 +8,10 @@ Product architecture consolidation after the Discourse feasibility PoC.
 
 Start with:
 
+- `PROJECT_RULES.md`
+- `docs/STATUS.md`
 - `docs/00-START-HERE.md`
 - `docs/00-DECISIONS.md`
-- `docs/00-DOCS-INVENTORY.md`
 
 ## Product north star
 
@@ -52,4 +53,4 @@ See `docs/research/DISCOURSE-SPIKE-RESULTS.md` for evidence and `docs/00-DECISIO
 
 Do not build a custom forum engine.
 
-Do not assume research notes are current architecture. Follow the documentation hierarchy in `docs/00-START-HERE.md`.
+Do not assume research notes are current architecture. Follow the source-of-truth hierarchy in `PROJECT_RULES.md`; use `docs/STATUS.md` for the current authorized state.
