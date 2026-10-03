@@ -61,7 +61,8 @@ See `docs/00-DECISIONS.md` for exact accepted decisions.
 - operational execution-discipline adoption reconciled with current governance.
 - historical Discourse spike and engine-comparison documents marked explicitly
   as historical research inputs;
-- ADR-001 принят как CANONICAL boundary contract между website и Discourse.
+- ADR-001 принят как CANONICAL boundary contract между website и Discourse;
+- P0 website↔Discourse integration contract принят как CANONICAL.
 
 ## Активный архитектурный долг
 
@@ -69,7 +70,6 @@ ADR-001 принят и больше не является открытым до
 
 До frontend implementation остаются:
 
-- production website↔Discourse integration contract;
 - frontend/runtime architecture decision;
 - website CMS/content-storage и editorial workflow decision;
 - exact search architecture across website and forum content;
@@ -89,8 +89,9 @@ Current product documents:
 - `docs/product/PRODUCT-REQUIREMENTS.md` — ACTIVE DRAFT, reconciled current PRD
 - `docs/product/MONETIZATION-MODEL.md` — ACTIVE DRAFT
 
-ADR-001 принят как CANONICAL. Следующая активная архитектурная задача —
-production website↔Discourse integration contract.
+ADR-001 и P0 website↔Discourse integration contract приняты как CANONICAL.
+Следующая активная архитектурная задача должна быть выбрана из оставшихся
+frontend/runtime, CMS/content-storage, search и IA mapping решений.
 
 ## Deferred / not active
 
@@ -106,7 +107,6 @@ production website↔Discourse integration contract.
 
 ## Open product / architecture decisions
 
-- production website↔Discourse integration contract;
 - production frontend/site technology;
 - exact content-management model for standalone KAFENE guides;
 - exact search architecture;
@@ -118,17 +118,17 @@ production website↔Discourse integration contract.
 
 ## Следующий разрешённый шаг
 
-Определить production website↔Discourse integration contract поверх принятого
-ADR-001.
+Выбрать и закрыть следующий минимальный архитектурный blocker перед frontend
+implementation.
 
-Задачу держать узкой. В этом же проходе не:
+Допустимые кандидаты:
 
-- выбирать frontend stack;
-- выбирать CMS/content-storage implementation;
-- реализовывать integration;
-- реализовывать News или Changes automation;
-- реализовывать custom Ask KAFENE;
-- возвращать Jev;
-- расширять scope до frontend build.
+- frontend/runtime;
+- CMS/content-storage и editorial workflow;
+- search architecture;
+- production IA mapping.
+
+Задачу держать узкой и не смешивать несколько архитектурных решений в один
+проход.
 
 If the user explicitly changes priority, update this file accordingly.
