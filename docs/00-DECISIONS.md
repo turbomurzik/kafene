@@ -53,7 +53,7 @@ For MVP, either may be editorial/manual. Automated monitoring/aggregation pipeli
 
 ## DEC-006 — Documentation discipline
 
-**Decision:** KAFENE uses a source-of-truth hierarchy with `00-START-HERE.md`, `00-DECISIONS.md` and `00-DOCS-INVENTORY.md`. Research is not canonical by default. New durable documents must be registered in the inventory, and existing current documents should be updated instead of creating parallel "latest" variants.
+**Decision:** KAFENE uses `PROJECT_RULES.md` as the single canonical repository-governance source. `docs/STATUS.md` is the current-state dashboard; `docs/00-DECISIONS.md` records accepted product/architecture decisions; `docs/00-DOCS-INVENTORY.md` records durable document status; `docs/00-START-HERE.md` is onboarding only. Research is not canonical by default. New durable documents must be registered in the inventory, and existing current documents should be updated instead of creating parallel "latest" variants. `AGENTS.md` and `CLAUDE.md` are thin entry stubs and may not create competing governance.
 
 **Status:** ACCEPTED.
 
