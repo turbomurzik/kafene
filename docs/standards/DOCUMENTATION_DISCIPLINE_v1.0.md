@@ -9,6 +9,8 @@ and research notes silently becoming product truth.
 
 This standard applies to durable project documentation in the KAFENE repository.
 
+`PROJECT_RULES.md` is the higher-authority repository governance source. This standard is subordinate to it and may not create competing governance or authorize product work independently.
+
 ## 1. Canonical source
 
 GitHub is the canonical source of truth for KAFENE project documentation.
@@ -21,11 +23,13 @@ canonical until they are committed to the repository and registered in
 
 The documentation control surface consists of:
 
-1. `docs/00-START-HERE.md`
-2. `docs/00-DECISIONS.md`
-3. `docs/00-DOCS-INVENTORY.md`
+1. `PROJECT_RULES.md`
+2. `docs/STATUS.md`
+3. `docs/00-DECISIONS.md`
+4. `docs/00-DOCS-INVENTORY.md`
+5. `docs/00-START-HERE.md` as onboarding
 
-These files define reading order, accepted decisions and document status.
+These files define governance, current state, accepted decisions, document status and onboarding.
 
 ## 3. One-question / one-current-document rule
 
@@ -145,9 +149,10 @@ First:
 
 Agents must read:
 
-1. `docs/00-START-HERE.md`
-2. `docs/00-DECISIONS.md`
-3. `docs/00-DOCS-INVENTORY.md`
+1. `PROJECT_RULES.md`
+2. `docs/STATUS.md`
+3. `docs/00-DECISIONS.md`
+4. `docs/00-DOCS-INVENTORY.md`
 
 before durable product/architecture documentation work.
 
