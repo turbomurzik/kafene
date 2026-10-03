@@ -75,8 +75,12 @@ topic_space_id -> discourse_topic_id
 
 ## 5. Разрешённые поля
 
-Integration должна читать только зафиксированный минимальный набор community
-metadata.
+KAFENE-side нормализованная модель может зависеть, сохранять в cache и
+передавать frontend только зафиксированный минимальный набор community metadata.
+
+Discourse endpoint может физически возвращать дополнительные поля, но они не
+должны становиться частью KAFENE integration contract, сохраняться для
+community widgets или передаваться frontend.
 
 ### Linkage
 
@@ -84,13 +88,20 @@ metadata.
 
 ### Display
 
+Обязательные поля для отображения community card:
+
 - title;
 - native URL;
 - language;
 - reply count;
-- latest activity timestamp;
+- latest activity timestamp.
+
+Необязательные поля:
+
 - solved/Q&A state, где применимо;
 - category/subcategory label.
+
+Отсутствие необязательного поля само по себе не делает карточку невалидной.
 
 Category/subcategory label в P0 отображается as-is из Discourse. KAFENE-side
 taxonomy normalization, rename или remapping для этого поля не выполняются.
@@ -100,7 +111,8 @@ taxonomy normalization, rename или remapping для этого поля не 
 
 ## 6. Поля вне P0 scope
 
-P0 integration не должна читать или выводить в website community widgets:
+P0 integration не должна зависеть от, сохранять для community widgets или
+передавать frontend следующие данные:
 
 - excerpt;
 - author;
@@ -109,6 +121,9 @@ P0 integration не должна читать или выводить в website
 - arbitrary post body;
 - private/staff/restricted metadata;
 - любые другие поля, не перечисленные в разделе 5.
+
+Дополнительные поля, физически присутствующие в Discourse response, должны
+игнорироваться.
 
 Расширение allowlist требует отдельного решения.
 
@@ -137,8 +152,11 @@ Cache:
 Однако без staleness UI community data не считаются valid старше **15 минут**.
 Это жёсткий P0 freshness ceiling.
 
-После превышения 15 минут cached community data должны рассматриваться как
-недоступные и не показываться.
+Freshness age рассчитывается от времени последнего успешного получения данных
+из Discourse (`fetched_at`), а не от `latest activity timestamp`.
+
+После превышения 15 минут с `fetched_at` cached community data должны
+рассматриваться как недоступные и не показываться.
 
 ## 9. Failure policy
 
@@ -147,6 +165,9 @@ P0 использует **hide-on-outage**.
 Если Discourse недоступен, timeout/error получен и valid cache отсутствует,
 community-dependent surface скрывается или деградирует согласно canonical
 HOME INTERACTION MODEL.
+
+Для homepage фактическое скрытие или fallback forum-driven блока должно
+логироваться через `homepage_block_degraded` согласно HOME INTERACTION MODEL.
 
 Остальной KAFENE website продолжает работать.
 
@@ -165,7 +186,7 @@ Failure policy применяется не только к service-level outage.
 - не найден;
 - перемещён так, что текущая ссылка/mapping больше невалидна;
 - недоступен анонимному посетителю;
-- возвращает непригодный или неполный response;
+- возвращает response без обязательных полей из раздела 5;
 - имеет сломанный mapping;
 
 то соответствующая карточка/элемент скрывается.
