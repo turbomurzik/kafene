@@ -20,6 +20,8 @@ This inventory is the registry of durable project documentation. A file being ne
 | `docs/architecture/ADR-001-FORUM-ENGINE.md` | ACTIVE DRAFT | Proposed ADR, stale in part after website/forum separation; must be rewritten before acceptance. |
 | `docs/operations/agent_execution_discipline_adoption.md` | OPERATIONS | KAFENE adoption boundary for the pinned execution standard. |
 | `docs/operations/git-handoff.md` | OPERATIONS | Git/worktree handoff procedure. |
+| `docs/operations/documentation_discipline_adoption.md` | OPERATIONS | KAFENE adoption of the documentation discipline standard. |
+| `docs/standards/DOCUMENTATION_DISCIPLINE_v1.0.md` | STANDARD | KAFENE documentation source-of-truth, status and anti-duplication rules. |
 | `docs/standards/AGENT_EXECUTION_DISCIPLINE_v1.1.md` | STANDARD | Pinned shared execution standard. |
 | `docs/standards/AGENT_EXECUTION_DISCIPLINE_v1.1.sha256` | STANDARD | Integrity hash for pinned standard. |
 
@@ -42,6 +44,5 @@ The following need later reconciliation, rewrite or retirement:
 - `docs/product/PRODUCT-REQUIREMENTS.md`
 - `docs/architecture/ADR-001-FORUM-ENGINE.md`
 - `docs/research/ENGINE-COMPARISON.md`
-- stale header/template fields in `docs/research/DISCOURSE-SPIKE-RESULTS.md`
 
 Move files to an archive only after their replacement is canonical.
