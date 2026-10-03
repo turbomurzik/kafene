@@ -1,6 +1,6 @@
 # Модель взаимодействия главной страницы KAFENE
 
-**Статус:** ACTIVE DRAFT
+**Статус:** CANONICAL
 
 ## Назначение
 
@@ -430,7 +430,16 @@ MVP может учитывать:
 
 На старте — редакционно.
 
-После появления достаточных данных — сочетание usage signals и editorial override.
+Usage-based ranking включается только после bootstrap threshold:
+
+- не менее **100 событий `guide_open` за последние 30 дней** по каталогу в целом;
+- и не менее **10 `guide_open` за последние 30 дней** у конкретного guide, прежде чем его usage signal влияет на ranking.
+
+До достижения threshold ranking остаётся editorial-only.
+
+После threshold используется сочетание usage signals и editorial override.
+
+Threshold является стартовым operational default и может быть изменён позднее на основании реальных данных отдельным product decision.
 
 ### Fallback
 
@@ -672,6 +681,18 @@ Dedup выполняется **между всеми homepage blocks**, а не 
 
 ### Topic-level dedup
 
+Для сквозного dedup используется `topic_space_id` как основной cross-surface linkage key.
+
+Правила:
+
+- first-party сущности, которые должны считаться частью одной смысловой темы, получают общий `topic_space_id`;
+- homepage card наследует `topic_space_id` своей source entity;
+- forum topic может быть связан с `topic_space_id` через KAFENE metadata / adapter mapping;
+- точный одинаковый `destination` дедуплицируется независимо от `topic_space_id`;
+- если у внешнего/forum item нет `topic_space_id`, автоматический cluster-level dedup не выполняется: остаётся только exact-destination dedup и editorial/manual override.
+
+Это делает понятие topic cluster системным, а не исключительно редакторским суждением.
+
 Широкая тема может появляться в нескольких блоках только если блоки выполняют разные функции.
 
 Пример:
@@ -714,6 +735,22 @@ Dedup выполняется **между всеми homepage blocks**, а не 
 - соседние секции поднимаются вверх;
 - порядок оставшихся блоков сохраняется;
 - страница не показывает пустые заголовки секций.
+
+### Абсолютный day-zero floor
+
+Если editorial content ещё вообще не опубликован, homepage не должна симулировать наполненность.
+
+В этом состоянии:
+
+- Hero / поиск остаётся доступным;
+- глобальная навигация остаётся доступной;
+- `/guides` существует и показывает честный empty state, если гайдов ещё нет;
+- city/locality navigation показывается только для уже настроенных deployment localities;
+- forum-driven blocks могут показываться, если Discourse доступен и реально содержит подходящие данные;
+- пустые Blocks 1 / 2 / 4 / 5 скрываются;
+- synthetic evergreen, fake activity и автоматически выдуманные карточки запрещены.
+
+Это технический абсолютный floor, а не критерий достаточности контента для публичного запуска.
 
 ### Минимально полезная главная
 
@@ -770,6 +807,7 @@ Homepage card — это **presentation/view model**, а не универсал
 - `destination`;
 - `related_guide_ids`;
 - `related_topic_ids`;
+- `topic_space_id`;
 - `city`;
 - `valid_from`;
 - `valid_until`;
@@ -862,7 +900,8 @@ Cross-language semantic retrieval остаётся отдельной capability
 - `journey_open`;
 - `forum_topic_open`;
 - `city_open`;
-- `guides_index_open`.
+- `guides_index_open`;
+- `homepage_block_degraded`.
 
 ### Минимальные свойства
 
@@ -874,6 +913,13 @@ Cross-language semantic retrieval остаётся отдельной capability
 - block;
 - content/item id;
 - destination type.
+
+Для `homepage_block_degraded` дополнительно:
+
+- `degradation_mode`: `hidden` или `fallback`;
+- `reason`: например `api_unavailable`, `empty_source`, `insufficient_data`, `editorial_empty`, `render_error`.
+
+Событие пишется только при фактической деградации блока, а не на каждый нормальный render.
 
 ### Граница
 
@@ -974,21 +1020,22 @@ Homepage MVP не обязан сразу показывать business director
 - cold-start ranking: deterministic recency/activity rule;
 - минимальная аналитика: входит в MVP;
 - change record и homepage card: отдельные сущности;
-- page-wide fallback: normal reflow + минимально полезная static/editorial surface.
+- page-wide fallback: normal reflow + абсолютный day-zero floor;
+- topic cluster linkage: `topic_space_id`;
+- Popular Guides bootstrap threshold: 100 catalog opens / 10 per candidate in trailing 30 days;
+- degradation observability: `homepage_block_degraded` event.
 
 ---
 
-## Условие принятия
+## Проверка принятия
 
-Документ может стать `CANONICAL` только после явного review/acceptance.
+Перед переводом в `CANONICAL` документ был сверён с:
 
-Перед переводом в `CANONICAL` необходимо выполнить отдельную проверку:
+1. `PROJECT_RULES.md`;
+2. `docs/00-DECISIONS.md`;
+3. `docs/STATUS.md`;
+4. `docs/00-DOCS-INVENTORY.md`.
 
-1. сверить документ с `PROJECT_RULES.md`;
-2. сверить с `docs/00-DECISIONS.md`;
-3. сверить с `docs/STATUS.md`;
-4. сверить статус и роль документа в `docs/00-DOCS-INVENTORY.md`;
-5. убедиться, что draft не вводит решение, противоречащее более высокому source of truth;
-6. либо устранить конфликт, либо сначала обновить соответствующее higher-authority decision/status.
+Конфликтов с higher-authority source of truth после закрытия review findings не обнаружено.
 
-До этого документ остаётся `ACTIVE DRAFT`.
+Текущий статус: `CANONICAL`.
