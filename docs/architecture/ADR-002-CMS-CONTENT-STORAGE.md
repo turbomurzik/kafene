@@ -98,10 +98,28 @@ Guide, Journey, Collection, Change, Source, Locality и TopicSpace модели�
 Каждая canonical entity должна иметь stable identity, не зависящую от slug,
 title, locale, publication state или revision.
 
-Конкретный тип stable ID этим ADR пока не выбирается.
+Для canonical entities принимается семейство **UUID** с нативным Postgres
+`uuid` type через поддерживаемую Payload adapter configuration.
 
-**Тип ID должен быть закрыт отдельным решением до первой production migration
-или появления persistent cross-entity data.**
+В P0 используется один canonical ID на сущность без отдельного internal/public
+ID слоя.
+
+Инварианты ID:
+
+- непрозрачный для пользователя;
+- неизменяемый;
+- не переиспользуется после удаления;
+- не выводится из slug, title или locale;
+- один canonical entity ID сохраняется при любом числе локалей и revisions.
+
+Конкретная generation policy UUIDv4 или UUIDv7 остаётся implementation detail.
+
+Предпочтение отдаётся UUIDv7 только если закреплённая стабильная версия Payload
+поддерживает его нативно для выбранного Postgres adapter. Если нет — используется
+UUIDv4. Кастомные generation hooks только ради UUIDv7 не вводятся.
+
+До канонизации ADR-002 должен быть выполнен сквозной validation test UUID через
+relationships, versions и localized fields на закреплённой версии Payload.
 
 ### Localization
 
@@ -112,11 +130,39 @@ title, locale, publication state или revision.
 объективно относится только к одной языковой аудитории или практический ответ
 реально различается.
 
-До канонизации production schema должны быть отдельно определены publication
-status по locale и fallback behavior при отсутствии locale representation.
+Payload документирует field-level localization и отдельный locale-aware
+publication status mechanism (`localizeStatus`) для draft-enabled content, но
+этот механизм в текущей документации помечен как experimental/beta и не
+считается автоматически принятым production-механизмом KAFENE.
 
-Этот ADR не утверждает, что конкретный механизм per-locale publication уже
-проверен в Payload для нашего deployment.
+До канонизации production schema должны быть отдельно определены:
+
+- publication status по locale;
+- fallback behavior при отсутствии конкретной locale representation;
+- пригодность `localizeStatus` или другого поддерживаемого механизма именно в
+  закреплённой версии Payload.
+
+Этот ADR фиксирует требование к поведению, но не канонизирует конкретный
+locale-publication механизм до pinned-version validation.
+
+### TopicSpace identity и readable key
+
+Для `TopicSpace` фиксируется узкое дополнительное правило, необходимое для
+cross-surface linkage из ADR-001:
+
+- `TopicSpace.id` — canonical UUID entity ID;
+- `TopicSpace.key` — отдельный человекочитаемый stable semantic key;
+- `TopicSpace.key` уникален внутри deployment;
+- `TopicSpace.key` неизменяем после создания;
+- если key выбран неудачно, старый TopicSpace помечается устаревшим и создаётся
+  новый TopicSpace вместо rename/migration key;
+- `topic_space_id` означает UUID relation к TopicSpace;
+- `topic_space_key` означает readable key;
+- URL/presentation slug остаётся отдельной concern.
+
+Это правило **не распространяется автоматически** на Guide, Change или другие
+сущности. Нужны ли им собственные stable readable keys, остаётся открытым
+schema-design вопросом.
 
 ### First-class relations
 
@@ -201,7 +247,7 @@ Major version Payload не обновляется автоматически т�
 
 - точные поля Guide/Journey/Collection/Change/Source/Locality/TopicSpace;
 - exact collection/table names;
-- точный stable ID type;
+- UUID generation policy (v4 или нативный v7);
 - slug format;
 - exact revision retention;
 - media storage provider;
@@ -279,11 +325,13 @@ Git-reviewable domain evolution, portability и отсутствия необх�
 
 Перед переводом ADR-002 в CANONICAL должны быть закрыты как минимум:
 
-1. stable ID type до первой production migration;
+1. сквозной validation test UUID через relationships, versions и localized
+   fields на закреплённой версии Payload;
 2. locale publication/fallback semantics;
 3. подтверждение, что выбранная Payload major version поддерживает необходимые
    draft/version/localization/relationship capabilities для KAFENE;
-4. отсутствие конфликта с будущим frontend/runtime ADR;
-5. минимальная initial schema реализуема без обхода write boundary.
+4. pinned-version validation механизма locale publication;
+5. отсутствие конфликта с будущим frontend/runtime ADR;
+6. минимальная initial schema реализуема без обхода write boundary.
 
 До явного принятия ADR-002 остаётся **ACTIVE DRAFT**.
