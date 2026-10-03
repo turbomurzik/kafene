@@ -1,72 +1,60 @@
 # KAFENE Documentation Start Here
 
-Status: **CANONICAL**
+Status: **CANONICAL ONBOARDING**
 
-This file defines how to read KAFENE documentation.
+This is the human-readable documentation entrypoint. Repository governance itself
+is defined by `PROJECT_RULES.md`.
 
-Documentation discipline: `docs/standards/DOCUMENTATION_DISCIPLINE_v1.0.md`.
-KAFENE adoption: `docs/operations/documentation_discipline_adoption.md`.
+## Required reading order
 
-## Source-of-truth order
+For substantive product, architecture or durable documentation work:
 
-For project work, read in this order:
+1. `PROJECT_RULES.md`
+2. `docs/STATUS.md`
+3. `docs/00-DECISIONS.md`
+4. `docs/00-DOCS-INVENTORY.md`
+5. the current document(s) for the scoped task
+6. research/evidence only when relevant
 
-1. `docs/00-START-HERE.md`
-2. `docs/00-DECISIONS.md`
-3. `docs/00-DOCS-INVENTORY.md`
-4. the current document for the specific workstream
-5. evidence/research documents only as supporting material
+A lower-level document may not silently override a higher-level one.
 
-If two documents conflict, do not silently reconcile them. Follow the higher source in this hierarchy and flag the conflict.
+## Control documents
 
-## Documentation rule
+- `PROJECT_RULES.md` — canonical repository governance.
+- `docs/STATUS.md` — current phase, active task and next authorized step.
+- `docs/00-DECISIONS.md` — accepted product/architecture decisions.
+- `docs/00-DOCS-INVENTORY.md` — registry and status of durable docs.
+- `docs/standards/DOCUMENTATION_DISCIPLINE_v1.0.md` — subordinate documentation standard.
+- `docs/operations/documentation_discipline_adoption.md` — KAFENE applicability record.
 
-One question should have one current authoritative document.
+## Core documentation rule
+
+One durable question should have one current authoritative document.
 
 Do not create a new document when an existing current document can be updated.
-Do not make a research note canonical merely because it is newer.
+Do not treat research, evidence, recency or a newer filename as a decision.
 
-Every durable document must be registered in `docs/00-DOCS-INVENTORY.md` with one of these statuses:
-
-- **CANONICAL**
-- **ACTIVE DRAFT**
-- **EVIDENCE**
-- **RESEARCH INPUT**
-- **DEFERRED**
-- **SUPERSEDED**
-- **OPERATIONS**
-- **STANDARD**
-
-When a research/spike workstream ends, it must do at least one of:
-
-1. update a current canonical document;
-2. create/update a decision in `docs/00-DECISIONS.md`;
-3. be marked DEFERRED or SUPERSEDED in the inventory.
-
-It must not remain an ambiguous "latest" document.
+Every durable document must be registered in the inventory.
 
 ## Current project state
 
-KAFENE is moving from feasibility research into product construction.
+Do not duplicate current-state prose here.
 
-Current accepted direction:
+Read `docs/STATUS.md` for:
+- current phase;
+- accepted baseline;
+- completed work;
+- deferred work;
+- active task;
+- next authorized step.
 
-- the public KAFENE website/knowledge layer and the community forum are separate product surfaces;
-- Discourse is retained as the forum/community substrate;
-- multilingual semantic retrieval on Discourse has been validated;
-- native Discourse Ask AI is not accepted as the production Ask KAFENE answer layer;
-- guides, collections, journeys and official-change content are intended to live on KAFENE website pages, with contextual links to forum discussions;
-- custom Ask KAFENE, automated News, automated Changes and Jev reranking are not current MVP implementation blockers.
+## Current caution
 
-See `docs/00-DECISIONS.md` for exact decisions and evidence references.
+The inventory currently marks several older documents as drafts/research inputs,
+including the PRD and ADR-001. Their presence does not make their stale
+Discourse-as-knowledge-core assumptions current architecture.
 
-## Current documents to treat cautiously
+## Contributor rule
 
-- `docs/product/PRODUCT-REQUIREMENTS.md` is an ACTIVE DRAFT and still contains assumptions from the earlier "Discourse as knowledge core" model.
-- `docs/architecture/ADR-001-FORUM-ENGINE.md` is PROPOSED and stale in part. Do not accept it in its current wording.
-- `docs/research/ENGINE-COMPARISON.md` is historical research input.
-- `docs/research/DISCOURSE-FEASIBILITY-SPIKE.md` is the historical test protocol; measured results live in `DISCOURSE-SPIKE-RESULTS.md`.
-
-## Agent rule
-
-Before adding a new durable documentation file, check the inventory and update an existing current document if possible. If a new file is genuinely necessary, register it in the inventory in the same change.
+If unsure where a change belongs, do not create a parallel structure. Check
+`PROJECT_RULES.md`, the inventory and the current owning document first.
