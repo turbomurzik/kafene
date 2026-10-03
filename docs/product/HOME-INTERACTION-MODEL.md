@@ -26,6 +26,27 @@
 - Jev / reranking;
 - финальную архитектуру городских сервисов и бизнеса.
 
+## Домен-агностичное ограничение
+
+Этот документ описывает **Cyprus deployment**, но реализация не должна жёстко кодировать Кипр как единственно возможный домен.
+
+В portable core должны параметризоваться:
+
+- market / deployment;
+- country / state / city hierarchy;
+- languages;
+- categories;
+- currency;
+- localities;
+- guide taxonomy;
+- business taxonomy;
+- local source configuration;
+- commercial / regulatory configuration.
+
+Названия вроде `/limassol`, RU/EN и примеры кипрских категорий относятся к первой deployment-конфигурации.
+
+Тот же core должен позволять позже развернуть, например, New York deployment без изменения базовой модели homepage, guides, journeys, discussions, businesses, offers и leads.
+
 ## Граница продукта
 
 KAFENE состоит из двух связанных поверхностей.
@@ -732,7 +753,10 @@ Homepage card — это **presentation/view model**, а не универсал
 - journey;
 - change;
 - forum topic;
-- city landing.
+- city / locality landing;
+- business;
+- offer;
+- commercial / sponsorship placement.
 
 Минимальные presentation fields:
 
@@ -896,6 +920,25 @@ MVP не требует сложной analytics platform.
 
 ---
 
+## Коммерческие extension points
+
+Homepage MVP не обязан сразу показывать business directory или lead forms.
+
+Однако interaction model не должен блокировать позднее появление:
+
+- `Business`;
+- `Offer`;
+- `Lead`;
+- sponsored/commercial card;
+- category/locality sponsorship;
+- intent-specific lead CTA.
+
+Коммерческий элемент должен иметь отдельный presentation type и явный disclosure state.
+
+Каноническое knowledge content не меняет editorial ranking из-за коммерческой оплаты.
+
+Подробная модель: `docs/product/MONETIZATION-MODEL.md`.
+
 ## Явно deferred
 
 Не входят в эту MVP-модель:
@@ -921,7 +964,9 @@ MVP не требует сложной analytics platform.
 2. точные веса production ranking для `Сейчас обсуждают` после накопления данных;
 3. CMS / content-storage implementation для guides, journeys и editorial content;
 4. frontend stack;
-5. будущая адаптивная персонализация returning users.
+5. будущая адаптивная персонализация returning users;
+6. точная multi-deployment administration model;
+7. точный UI коммерческих placements.
 
 Следующие вопросы **больше не считаются открытыми** в рамках этого draft:
 
