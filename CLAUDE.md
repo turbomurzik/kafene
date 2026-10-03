@@ -12,6 +12,10 @@ Do not treat research or a newer file as canonical unless the inventory says so.
 Do not create a parallel documentation file when an existing current document can be updated.
 Any new durable doc must be registered in the inventory in the same change.
 
+Documentation discipline:
+- standard: `docs/standards/DOCUMENTATION_DISCIPLINE_v1.0.md`;
+- KAFENE adoption: `docs/operations/documentation_discipline_adoption.md`.
+
 Execution discipline:
 - pinned standard: `docs/standards/AGENT_EXECUTION_DISCIPLINE_v1.1.md`;
 - KAFENE adoption: `docs/operations/agent_execution_discipline_adoption.md`.
