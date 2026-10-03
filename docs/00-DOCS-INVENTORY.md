@@ -14,7 +14,7 @@ This inventory is the registry of durable project documentation. A file being ne
 | `docs/STATUS.md` | CURRENT | Current phase, active task, deferred work and next authorized step; not a diary. |
 | `docs/00-DECISIONS.md` | CANONICAL | Accepted product/architecture decisions. |
 | `docs/00-DOCS-INVENTORY.md` | CANONICAL | Registry and status of durable docs. |
-| `docs/product/HOME-INTERACTION-MODEL.md` | ACTIVE DRAFT | MVP homepage/dashboard interaction mechanics; awaiting explicit review/acceptance before becoming canonical. |
+| `docs/product/HOME-INTERACTION-MODEL.md` | CANONICAL | Accepted MVP homepage/dashboard interaction mechanics, including dedup, cold-start, degradation and analytics rules. |
 | `docs/product/MONETIZATION-MODEL.md` | ACTIVE DRAFT | Domain-agnostic monetization model; architectural principles accepted, pricing/packages remain working assumptions. |
 | `docs/product/PRODUCT-REQUIREMENTS.md` | ACTIVE DRAFT | Needs reconciliation with separate website/forum architecture before becoming canonical. |
 | `docs/research/DISCOURSE-FEASIBILITY-SPIKE.md` | RESEARCH INPUT | Historical spike protocol. Its old candidate architecture is not current product architecture. |
@@ -38,7 +38,7 @@ For repository/product governance, the current control set is deliberately small
 3. `docs/00-DECISIONS.md`
 4. `docs/00-DOCS-INVENTORY.md`
 
-There is an ACTIVE DRAFT HOME INTERACTION MODEL, but there is not yet a canonical HOME INTERACTION MODEL, final PRD, final frontend architecture or final Ask KAFENE architecture. Do not invent one by treating a research note as accepted.
+There is now a canonical HOME INTERACTION MODEL. There is not yet a final PRD, final frontend architecture or final Ask KAFENE architecture. Do not invent one by treating a research note as accepted.
 
 ## Cleanup candidates
 
