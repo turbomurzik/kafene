@@ -84,6 +84,15 @@ service.
 
 P0 не должен зависеть от unsupported direct database coupling.
 
+Любой P0 frontend-компонент, который показывает live Discourse data
+(например, reply count, latest activity, live topic metadata или forum feed),
+может быть сверстан и протестирован на mock/static fixture, но не должен
+подключаться к production Discourse data до принятия отдельного
+website↔Discourse integration contract из этого решения.
+
+Обычная ссылка на заранее известный forum URL не считается live data
+integration, если для её построения не требуется runtime lookup в Discourse.
+
 ## Решение 3. topic_space_id
 
 `topic_space_id` используется как KAFENE-owned semantic linkage key в уже
@@ -218,7 +227,9 @@ delivery или forum account model.
 - Discourse `id`;
 - username;
 - email;
-- created_at.
+- created_at;
+- account status, включая доступные признаки active / suspended / banned /
+  deleted state.
 
 Это необходимо для будущей контролируемой миграции/linking, но не делает эти
 поля глобальной KAFENE identity.
