@@ -59,7 +59,6 @@ For MVP, either may be editorial/manual. Automated monitoring/aggregation pipeli
 
 ## Open decisions — not yet accepted
 
-- exact HOME INTERACTION MODEL for MVP;
 - exact city-page module set and city filtering semantics beyond "not a separate forum taxonomy";
 - production website/frontend technology;
 - News aggregation pipeline;
@@ -106,5 +105,24 @@ Portable commercial primitives to preserve in the architecture:
 - monetization analytics events.
 
 Specific prices, package boundaries and regulated-category lead economics remain deployment-specific working assumptions, not universal core rules.
+
+**Status:** ACCEPTED.
+
+
+## DEC-009 — Canonical MVP Home Interaction Model
+
+**Decision:** `docs/product/HOME-INTERACTION-MODEL.md` is accepted as the canonical MVP interaction model for the KAFENE homepage/dashboard.
+
+It includes:
+- block sources, selection, click targets, update and fallback behavior;
+- page-wide degradation and day-zero floor;
+- cross-block dedup using `topic_space_id`;
+- deterministic cold-start behavior for forum activity;
+- bootstrap threshold for usage-ranked Popular Guides;
+- minimum analytics and degradation observability;
+- RU/EN editorial localization model;
+- portable/domain-agnostic deployment constraints.
+
+Future changes that materially alter these semantics require an explicit decision update.
 
 **Status:** ACCEPTED.
