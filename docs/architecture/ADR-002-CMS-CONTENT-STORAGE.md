@@ -130,20 +130,48 @@ relationships, versions и localized fields на закреплённой вер
 объективно относится только к одной языковой аудитории или практический ответ
 реально различается.
 
-Payload документирует field-level localization и отдельный locale-aware
-publication status mechanism (`localizeStatus`) для draft-enabled content, но
-этот механизм в текущей документации помечен как experimental/beta и не
-считается автоматически принятым production-механизмом KAFENE.
+Locale scope и publication state являются разными измерениями:
 
-До канонизации production schema должны быть отдельно определены:
+- scope отвечает на вопрос, для каких локалей сущность вообще предназначена;
+- publication state отвечает на вопрос, опубликовано ли конкретное locale
+  representation.
 
-- publication status по locale;
-- fallback behavior при отсутствии конкретной locale representation;
-- пригодность `localizeStatus` или другого поддерживаемого механизма именно в
-  закреплённой версии Payload.
+Locale-specific entity не считается "непереведённой" для остальных локалей и
+не должна автоматически показывать пользователю предложение перевода.
 
-Этот ADR фиксирует требование к поведению, но не канонизирует конкретный
-locale-publication механизм до pinned-version validation.
+Для multi-locale entity publication state должен поддерживаться независимо по
+локалям. Паритет переводов не требуется: EN может быть published при RU
+draft/missing и наоборот.
+
+Локаль считается publishable только если для неё заполнены и валидны все
+обязательные localized fields. Частично заполненная локаль не должна
+публиковаться как полноценное representation.
+
+Публичный delivery layer обязан сохранять отсутствие локали как отсутствие:
+
+- silent fallback localized editorial fields на default/другую locale запрещён;
+- CMS fallback не должен превращать missing/unpublished locale в якобы
+  опубликованный контент;
+- допустимо явно предложить пользователю перейти к другой опубликованной
+  локали, но не подставлять её body как requested locale;
+- конкретные redirect/404/noindex semantics остаются frontend/SEO решением.
+
+Payload документирует field-level localization и locale-aware publication status
+для draft-enabled content. В текущей линии Payload 3.x этот механизм требует
+отдельной pinned-version validation и не считается автоматически принятым
+production-механизмом KAFENE.
+
+Текущие upstream-risk классы, которые должны быть проверены на закреплённой
+версии перед production use:
+
+- корректность public filtering и access control при per-locale status;
+- поведение `locale: 'all'`/эквивалентных multi-locale запросов;
+- корректность versions/history при publish/unpublish одной локали;
+- отсутствие data-corruption проблем для localized complex fields, особенно
+  blocks, если они войдут в initial schema.
+
+Этот ADR фиксирует доменное требование к поведению, но не канонизирует конкретное
+Payload API/flag для locale publication до pinned-version validation.
 
 ### TopicSpace identity и readable key
 
@@ -185,14 +213,36 @@ localization, draft state или revision/version history.
 ### Provenance
 
 Provenance является частью доменной модели, а не свободным текстовым
-комментарием редактора. Модель должна позволять выражать Source, verification
-state, last_verified, effective dates и source linkage, где применимо.
+комментарием редактора.
+
+Общими для canonical entity могут оставаться, где применимо:
+
+- Source links;
+- effective dates;
+- relations;
+- external/native references.
+
+Verification state и `last_verified` не должны автоматически быть общими между
+локалями. Они относятся к конкретному locale representation либо к явно
+определённой проверяемой единице, если будущая schema задаст иной эквивалентный
+механизм.
+
+Редактирование localized editorial content должно инвалидировать verification
+для затронутой локали, если отдельно не доказано, что изменение не влияет на
+проверенное содержание.
 
 ### Publication state и verification state
 
 Publication и verification являются разными состояниями.
-`updated_at` или дата публикации не должны автоматически означать
-«актуально/проверено».
+
+Материал может быть published, но не verified/current.
+
+`updated_at`, дата публикации или публикация другой локали не должны
+автоматически означать «актуально/проверено» для текущего locale representation.
+
+Machine-generated translation сам по себе не получает published или verified
+status. Публикация локализованного контента является отдельным editorial
+действием.
 
 ### Portable deployment scope
 
@@ -217,7 +267,47 @@ structured content без зависимости от Payload Admin UI.
 state. Production-only schema changes через UI, которые невозможно восстановить
 из Git и migrations, недопустимы.
 
-## Решение 6. Frontend independence
+## Решение 6. Locale publication production gate
+
+До использования независимой per-locale публикации в production на закреплённой
+версии Payload должен пройти сквозной validation test как минимум для
+Postgres-adapter сценария KAFENE:
+
+1. EN published, RU draft/missing.
+2. Публичное чтение RU возвращает отсутствие RU representation, а не EN fallback.
+3. RU нельзя опубликовать при незаполненных обязательных RU localized fields.
+4. Publish/unpublish RU не меняет publication state EN.
+5. Version history сохраняет независимое состояние локалей.
+6. Изменение RU localized content инвалидирует RU verification, не EN.
+7. Public filtering/access-control запросы корректно работают для single-locale
+   и multi-locale retrieval patterns, используемых KAFENE.
+8. Если initial schema использует localized blocks или другие complex localized
+   structures, отдельно проверяется сохранность данных при draft/version/publish
+   цикле.
+
+Пока этот gate не пройден, native per-locale status Payload не считается
+production-safe dependency KAFENE.
+
+### Fallback plan при провале gate
+
+Если pinned-version validation не проходит, Payload не отвергается автоматически.
+
+Для P0 допускается fallback:
+
+- publication остаётся document-level в Payload;
+- KAFENE content model хранит явное locale-readiness состояние;
+- public delivery layer выдаёт locale только если она marked ready и проходит
+  required-field validation;
+- CMS `_status` не считается достаточным источником истины для locale
+  availability;
+- silent fallback по-прежнему запрещён;
+- localized blocks не используются в initial schema, если их correctness gate
+  не пройден.
+
+Fallback не меняет доменное решение о независимой locale availability; он только
+заменяет механизм реализации до появления production-safe native support.
+
+## Решение 7. Frontend independence
 
 Выбор Payload не выбирает public frontend framework.
 
@@ -231,7 +321,7 @@ Next.js.
 Эта возможность архитектурно допустима, но не считается проверенной для
 конкретного будущего KAFENE deployment stack до runtime/deployment validation.
 
-## Решение 7. Payload upgrades
+## Решение 8. Payload upgrades
 
 Major upgrade Payload считается schema-affecting architectural event.
 
@@ -327,11 +417,14 @@ Git-reviewable domain evolution, portability и отсутствия необх�
 
 1. сквозной validation test UUID через relationships, versions и localized
    fields на закреплённой версии Payload;
-2. locale publication/fallback semantics;
-3. подтверждение, что выбранная Payload major version поддерживает необходимые
+2. pinned-version locale publication production gate из Решения 6;
+3. проверка public filtering/access-control поведения для используемых KAFENE
+   locale query patterns;
+4. проверка localized blocks/complex localized structures, если они входят в
+   initial schema;
+5. подтверждение, что выбранная Payload major version поддерживает необходимые
    draft/version/localization/relationship capabilities для KAFENE;
-4. pinned-version validation механизма locale publication;
-5. отсутствие конфликта с будущим frontend/runtime ADR;
-6. минимальная initial schema реализуема без обхода write boundary.
+6. отсутствие конфликта с будущим frontend/runtime ADR;
+7. минимальная initial schema реализуема без обхода write boundary.
 
 До явного принятия ADR-002 остаётся **ACTIVE DRAFT**.
