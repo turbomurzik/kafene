@@ -4,6 +4,9 @@ Status: **CANONICAL**
 
 This file defines how to read KAFENE documentation.
 
+Documentation discipline: `docs/standards/DOCUMENTATION_DISCIPLINE_v1.0.md`.
+KAFENE adoption: `docs/operations/documentation_discipline_adoption.md`.
+
 ## Source-of-truth order
 
 For project work, read in this order:
