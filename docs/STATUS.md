@@ -15,7 +15,9 @@ CMS + Ask AI knowledge core" model is no longer the accepted product shape.
 
 ## Accepted baseline
 
-- KAFENE is Cyprus-first, knowledge-first and community-backed.
+- KAFENE is Cyprus-first in deployment, but the product core is domain-agnostic and portable across markets.
+- Market-specific country/state/city, languages, categories, currency, pricing and regulatory rules belong in deployment configuration.
+- KAFENE is knowledge-first and community-backed.
 - KAFENE website/knowledge layer and Discourse forum are separate connected
   surfaces.
 - Guides, collections/hubs, journeys and official-change content belong on the
@@ -26,6 +28,7 @@ CMS + Ask AI knowledge core" model is no longer the accepted product shape.
 - "Changes" means verified official-rule/procedure/source changes.
 - "News" is a separate current-events layer.
 - Automated News/Changes pipelines are not current MVP blockers.
+- Monetization preserves free canonical knowledge and is built around Business / Offer / Lead, sponsorship, subscriptions and affiliate/CPA where locally appropriate.
 
 See `docs/00-DECISIONS.md` for exact accepted decisions.
 
@@ -56,9 +59,11 @@ Do not treat them as higher authority than accepted decisions.
 
 ## Current active task
 
-**Review and accept the MVP HOME INTERACTION MODEL draft.**
+**Review the MVP HOME INTERACTION MODEL and MONETIZATION MODEL drafts, then reconcile the PRD.**
 
-Draft: `docs/product/HOME-INTERACTION-MODEL.md`.
+Drafts:
+- `docs/product/HOME-INTERACTION-MODEL.md`
+- `docs/product/MONETIZATION-MODEL.md`
 
 The draft covers only current MVP sources/mechanics and keeps future automation outside present implementation.
 
@@ -76,6 +81,7 @@ The draft covers only current MVP sources/mechanics and keeps future automation 
 ## Open product decisions
 
 - explicit acceptance of the current HOME INTERACTION MODEL draft;
+- exact pricing/package assumptions in the monetization model;
 - exact city landing/filter semantics and module set;
 - production frontend/site technology;
 - exact content-management model for standalone KAFENE guides;
@@ -83,7 +89,7 @@ The draft covers only current MVP sources/mechanics and keeps future automation 
 
 ## Next authorized step
 
-Review `docs/product/HOME-INTERACTION-MODEL.md`. If accepted, promote it to CANONICAL and then reconcile `docs/product/PRODUCT-REQUIREMENTS.md` against it.
+Review `docs/product/HOME-INTERACTION-MODEL.md` and `docs/product/MONETIZATION-MODEL.md`. Then reconcile `docs/product/PRODUCT-REQUIREMENTS.md` against the accepted portable-core, homepage and monetization decisions.
 
 Do **not** in the same task:
 - implement News automation;
