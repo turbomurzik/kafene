@@ -100,23 +100,34 @@ integration, если для её построения не требуется r
 
 Он:
 
+- является UUID relation к KAFENE-owned TopicSpace entity;
 - не заменяет native entity IDs;
 - не является Discourse topic ID;
-- не является website entity ID;
+- не является website entity ID других сущностей;
 - может связывать несколько сущностей, относящихся к одному practical topic
   space, например guide, collection, Change и один или несколько forum topics.
+
+Для TopicSpace дополнительно используется отдельный `topic_space_key` —
+immutable human-readable semantic key, уникальный внутри deployment.
 
 Пример:
 
 ```text
-topic_space_id = tax-2026
+topic_space_id  = 018f0f6a-7b2a-7c41-bf2a-6cb0d1e2a111
+topic_space_key = tax-2026
 
-KAFENE guide         guide_184
-KAFENE collection    collection_27
-KAFENE change        change_91
+KAFENE guide         [illustrative guide label]
+KAFENE collection    [illustrative collection label]
+KAFENE change        [illustrative change label]
 Discourse EN topic   topic 642
 Discourse RU topic   topic 811
 ```
+
+`topic_space_id` — UUID relation к canonical TopicSpace entity.
+`topic_space_key` — отдельный immutable human-readable key внутри deployment.
+
+Подписи guide/collection/change в примере являются только иллюстративными
+метками и не задают формат их реальных ID.
 
 Native IDs остаются authoritative внутри своих систем.
 
