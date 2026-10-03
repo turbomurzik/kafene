@@ -21,6 +21,7 @@ This inventory is the registry of durable project documentation. A file being ne
 | `docs/research/DISCOURSE-SPIKE-RESULTS.md` | EVIDENCE | Measured live Discourse/AI results. Factual evidence, not a product decision by itself; reconciled to the completed spike evidence. |
 | `docs/research/ENGINE-COMPARISON.md` | RESEARCH INPUT | Pre-spike Discourse vs XenForo research; live evidence takes precedence where available. |
 | `docs/research/JEV-RERANKING-SPIKE.md` | DEFERRED | Future reranking research hypothesis. Not current architecture. |
+| `docs/research/KAFENE-INFORMATION-ARCHITECTURE-RESEARCH.md` | RESEARCH INPUT | Research into IA, categories, tags and EN/RU structure; not canonical until separate validation. |
 | `docs/architecture/ADR-001-FORUM-ENGINE.md` | ACTIVE DRAFT | Proposed ADR, stale in part after website/forum separation; must be rewritten before acceptance. |
 | `docs/operations/agent_execution_discipline_adoption.md` | OPERATIONS | KAFENE adoption boundary for the pinned execution standard. |
 | `docs/operations/git-handoff.md` | OPERATIONS | Git/worktree handoff procedure. |
