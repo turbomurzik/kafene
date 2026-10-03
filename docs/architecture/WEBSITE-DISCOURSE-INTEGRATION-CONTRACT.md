@@ -1,6 +1,6 @@
 # KAFENE Website ↔ Discourse Integration Contract
 
-Статус: **ACTIVE DRAFT**
+Статус: **CANONICAL**
 
 Дата: 2026-10-03
 
@@ -239,16 +239,12 @@ KAFENE cache хранит только временную read-only копию.
 - business/marketplace integration;
 - broader cross-surface mapping architecture.
 
-## Условия последующей канонизации
+## Статус принятия
 
-Перед переводом в CANONICAL необходимо убедиться, что:
+Этот документ принят как **CANONICAL**.
 
-- контракт согласуется с ADR-001 и HOME INTERACTION MODEL;
-- frontend fixtures соответствуют allowlist полей;
-- implementation не требует privileged Discourse access;
-- 15-minute freshness ceiling и hide-on-outage реализуемы без отдельного
-  persisted read model;
-- resource-level failure не приводит к page-wide failure;
-- любые расширения scope явно вынесены в отдельное решение.
+Канонический статус отражён в `docs/00-DECISIONS.md`, `docs/STATUS.md` и
+`docs/00-DOCS-INVENTORY.md`.
 
-До явного принятия этот документ остаётся **ACTIVE DRAFT**.
+Любое изменение, расширяющее P0 integration scope, access level, allowlist полей,
+failure/freshness semantics или направление записи, требует отдельного решения.
