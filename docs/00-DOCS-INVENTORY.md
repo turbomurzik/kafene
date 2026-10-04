@@ -79,3 +79,6 @@ The following need later rewrite, supersession, validation, or explicit promotio
 
 Historical research/evidence files should remain preserved unless a separate
 archive/cleanup task explicitly authorizes moving them.
+
+
+- `docs/research/PAYLOAD-POSTGRES-SPIKE-RESULTS.md` — **EVIDENCE**. Фактический pinned-version Payload 3.90.2 + Postgres 16 spike: UUID, relations, localization, per-locale publication, versions и known-risk query probe; результат 6/6.
