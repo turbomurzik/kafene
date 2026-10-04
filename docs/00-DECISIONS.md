@@ -186,3 +186,36 @@ search engine, IdP vendor и будущая Ask KAFENE architecture этим р�
 retry/backoff значения и иные implementation details этим решением не выбираются.
 
 **Статус:** ACCEPTED.
+
+
+## DEC-012 — Canonical CMS/content-storage architecture
+
+**Решение:** `docs/architecture/ADR-002-CMS-CONTENT-STORAGE.md` принят как
+каноническая архитектура editorial knowledge layer KAFENE.
+
+Принятые положения:
+
+- Payload является CMS/application content layer;
+- Postgres является persistence для structured editorial knowledge;
+- Payload TypeScript schema/config задаёт authoritative structure content model;
+- content writes проходят через поддерживаемую Payload boundary, direct SQL
+  writes в generated/content tables запрещены;
+- canonical entities используют UUID family; в P0 один canonical ID на сущность;
+- `TopicSpace` имеет UUID `id` и отдельный immutable deployment-unique
+  human-readable `key`;
+- editorial localization использует одну canonical entity с localized fields;
+- publication state независим по локалям, silent fallback запрещён;
+- verification/freshness относится к locale representation и содержательная
+  правка локали должна инвалидировать её verification;
+- P0 не использует localized blocks;
+- Payload не выбирает public frontend framework и может оставаться отдельным
+  content service;
+- major Payload upgrades рассматриваются как schema-affecting architectural event.
+
+**Evidence:** `docs/research/PAYLOAD-POSTGRES-SPIKE-RESULTS.md` —
+Payload 3.90.2 + Postgres 16, результат 6/6.
+
+Точные поля initial schema, frontend/runtime, search, Ask KAFENE и deployment
+topology этим решением не выбираются.
+
+**Статус:** ACCEPTED.
