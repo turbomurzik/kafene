@@ -127,9 +127,12 @@ per-locale publication как P0 candidate.
 
 До канонизации остаются требования самого ADR, включая:
 
-- решение/validation вокруг locale-aware verification invalidation;
 - отдельный gate для localized blocks или отказ от них в initial schema;
 - остальные explicitly listed canonization conditions.
+
+Locale-aware verification invalidation остаётся обязательным implementation
+invariant, но не отдельным pre-canonization spike: конкретный hook реализуется
+при initial schema implementation.
 
 Если любой следующий pinned-version gate провалится, применяется fallback plan,
 описанный в ADR-002, без автоматического отказа от Payload + Postgres.
