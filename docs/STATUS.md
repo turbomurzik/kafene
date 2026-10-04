@@ -29,6 +29,7 @@ CMS + Ask AI knowledge core" model is no longer the accepted product shape.
 - "News" is a separate current-events layer.
 - Automated News/Changes pipelines are not current MVP blockers.
 - Monetization preserves free canonical knowledge and is built around Business / Offer / Lead, sponsorship, subscriptions and affiliate/CPA where locally appropriate.
+- A temporary Synthetic Community Bootstrap Layer is accepted for forum cold start; synthetic accounts must carry a persistent visible AI-persona label.
 
 See `docs/00-DECISIONS.md` for exact accepted decisions.
 
@@ -59,13 +60,16 @@ Do not treat them as higher authority than accepted decisions.
 
 ## Current active task
 
-**Reconcile the PRD against the canonical HOME INTERACTION MODEL and the monetization model.**
+**Research the Synthetic Community Bootstrap Layer before implementation.**
 
-Current product specs:
-- `docs/product/HOME-INTERACTION-MODEL.md` — CANONICAL
-- `docs/product/MONETIZATION-MODEL.md` — ACTIVE DRAFT
+The user explicitly changed priority from PRD reconciliation to the forum cold-start problem.
 
-The draft covers only current MVP sources/mechanics and keeps future automation outside present implementation.
+Current relevant docs:
+- `docs/product/HOME-INTERACTION-MODEL.md` — CANONICAL, updated to permit labeled synthetic forum activity;
+- `docs/research/SYNTHETIC-COMMUNITY-BOOTSTRAP-LAYER.md` — RESEARCH INPUT;
+- `docs/product/MONETIZATION-MODEL.md` — ACTIVE DRAFT, unchanged.
+
+The research pass must define persona continuity, memory, social graph, activity policy, orchestration, grounding, moderation, cost controls, and decay/retirement behavior before any production implementation.
 
 ## Deferred / not active
 
@@ -76,7 +80,8 @@ The draft covers only current MVP sources/mechanics and keeps future automation 
 - Jev reranking;
 - production-like living-knowledge automation;
 - final city-specific services/business layer;
-- ADR-001 acceptance in its current wording.
+- ADR-001 acceptance in its current wording;
+- Synthetic Community Bootstrap Layer implementation before completion of the research/spec pass.
 
 ## Open product decisions
 
@@ -84,13 +89,18 @@ The draft covers only current MVP sources/mechanics and keeps future automation 
 - exact city landing/filter semantics and module set;
 - production frontend/site technology;
 - exact content-management model for standalone KAFENE guides;
-- later Ask KAFENE architecture.
+- later Ask KAFENE architecture;
+- exact synthetic persona state/memory model;
+- synthetic population size and activity distribution;
+- synthetic-to-human / synthetic-to-synthetic interaction policy;
+- organic-activity thresholds for reducing or retiring synthetic participation.
 
 ## Next authorized step
 
-Reconcile `docs/product/PRODUCT-REQUIREMENTS.md` against the canonical HOME INTERACTION MODEL, accepted portable-core decisions, and the current MONETIZATION MODEL draft.
+Run the dedicated Synthetic Community Bootstrap Layer research pass and turn it into an implementation-ready specification and minimal Discourse spike plan.
 
 Do **not** in the same task:
+- implement the synthetic population in production;
 - implement News automation;
 - implement Changes monitoring;
 - implement custom Ask KAFENE;
@@ -98,4 +108,4 @@ Do **not** in the same task:
 - accept ADR-001;
 - expand the scope into a full frontend build.
 
-If the user explicitly changes priority, update this file accordingly.
+After this research pass, return to PRD reconciliation unless the user changes priority again.
