@@ -1,6 +1,6 @@
 # ADR-002: CMS, Content Storage и Structured Knowledge Model
 
-Статус: **ACTIVE DRAFT**
+Статус: **CANONICAL**
 
 Дата: 2026-10-04
 
@@ -118,8 +118,9 @@ ID слоя.
 поддерживает его нативно для выбранного Postgres adapter. Если нет — используется
 UUIDv4. Кастомные generation hooks только ради UUIDv7 не вводятся.
 
-До канонизации ADR-002 должен быть выполнен сквозной validation test UUID через
-relationships, versions и localized fields на закреплённой версии Payload.
+Сквозной validation test на Payload 3.90.2 + Postgres 16 подтвердил UUID через
+relationships, versions и localized fields. Фактический результат зафиксирован
+в `docs/research/PAYLOAD-POSTGRES-SPIKE-RESULTS.md`.
 
 ### Localization
 
@@ -157,21 +158,16 @@ draft/missing и наоборот.
 - конкретные redirect/404/noindex semantics остаются frontend/SEO решением.
 
 Payload документирует field-level localization и locale-aware publication status
-для draft-enabled content. В текущей линии Payload 3.x этот механизм требует
-отдельной pinned-version validation и не считается автоматически принятым
-production-механизмом KAFENE.
+для draft-enabled content. На закреплённом стеке Payload 3.90.2 + Postgres 16
+необходимое P0-поведение прошло отдельный executable spike.
 
-Текущие upstream-risk классы, которые должны быть проверены на закреплённой
-версии перед production use:
+Конкретный Payload API/flag остаётся implementation detail конкретной pinned
+версии. При обновлении Payload locale behavior должен перепроверяться.
 
-- корректность public filtering и access control при per-locale status;
-- поведение `locale: 'all'`/эквивалентных multi-locale запросов;
-- корректность versions/history при publish/unpublish одной локали;
-- отсутствие data-corruption проблем для localized complex fields, особенно
-  blocks, если они войдут в initial schema.
-
-Этот ADR фиксирует доменное требование к поведению, но не канонизирует конкретное
-Payload API/flag для locale publication до pinned-version validation.
+Для P0 **localized blocks не используются**. Initial schema должна опираться на
+обычные structured fields и relations. Если позднее появится реальная
+необходимость локализовать целые block-layout structures, для них требуется
+отдельный bounded correctness test перед production use.
 
 ### TopicSpace identity и readable key
 
@@ -274,23 +270,24 @@ state. Production-only schema changes через UI, которые невозм
 
 ## Решение 6. Locale publication production gate
 
-До использования независимой per-locale публикации в production на закреплённой
-версии Payload должен пройти сквозной validation test как минимум для
-Postgres-adapter сценария KAFENE:
+Для закреплённого P0 stack gate пройден на Payload 3.90.2 + Postgres 16.
+Executable spike подтвердил:
 
 1. EN published, RU draft/missing.
 2. Публичное чтение RU возвращает отсутствие RU representation, а не EN fallback.
 3. RU нельзя опубликовать при незаполненных обязательных RU localized fields.
 4. Publish/unpublish RU не меняет publication state EN.
 5. Version history сохраняет независимое состояние локалей.
-6. Public filtering/access-control запросы корректно работают для single-locale
-   и multi-locale retrieval patterns, используемых KAFENE.
-7. Если initial schema использует localized blocks или другие complex localized
-   structures, отдельно проверяется сохранность данных при draft/version/publish
-   цикле.
+6. known-risk multi-locale query pattern `locale: 'all'` + published status
+   не воспроизвёл upstream failure на протестированном Postgres path.
 
-Пока этот gate не пройден, native per-locale status Payload не считается
-production-safe dependency KAFENE.
+Дальнейшие public access-control/query combinations проверяются обычными
+implementation tests по мере появления content API и не являются отдельным
+architecture blocker.
+
+Native per-locale status принят для P0 на протестированном pinned stack.
+При смене major/minor stack, затрагивающей localization/versioning semantics,
+соответствующий gate повторяется.
 
 ### Fallback plan при провале gate
 
@@ -305,8 +302,7 @@ production-safe dependency KAFENE.
 - CMS `_status` не считается достаточным источником истины для locale
   availability;
 - silent fallback по-прежнему запрещён;
-- localized blocks не используются в initial schema, если их correctness gate
-  не пройден.
+- localized blocks не используются в initial schema.
 
 Fallback не меняет доменное решение о независимой locale availability; он только
 заменяет механизм реализации до появления production-safe native support.
@@ -415,20 +411,25 @@ Payload сознательно выбирается как code-first CMS.
 Git-reviewable domain evolution, portability и отсутствия необходимости писать
 собственный CMS/admin.
 
-## Условия последующей канонизации
+## Closure record
 
-Перед переводом ADR-002 в CANONICAL должны быть закрыты как минимум:
+ADR-002 принят как CANONICAL на основании следующих закрытых архитектурных
+вопросов:
 
-1. сквозной validation test UUID через relationships, versions и localized
-   fields на закреплённой версии Payload;
-2. pinned-version locale publication production gate из Решения 6;
-3. проверка public filtering/access-control поведения для используемых KAFENE
-   locale query patterns;
-4. проверка localized blocks/complex localized structures, если они входят в
-   initial schema;
-5. подтверждение, что выбранная Payload major version поддерживает необходимые
-   draft/version/localization/relationship capabilities для KAFENE;
-6. отсутствие конфликта с будущим frontend/runtime ADR;
-7. минимальная initial schema реализуема без обхода write boundary.
+1. Payload + Postgres выбран как CMS/content-storage stack.
+2. UUID, relationships, versions и localized fields подтверждены executable
+   spike на Payload 3.90.2 + Postgres 16.
+3. Независимая EN/RU publication semantics и запрет silent fallback подтверждены
+   тем же spike.
+4. P0 не использует localized blocks, поэтому известный complex-localization risk
+   не входит в initial schema.
+5. Public access-control/query correctness остаётся обязательным implementation
+   test, но не architecture blocker.
+6. Выбор Payload не выбирает public frontend: конкретный frontend/runtime stack
+   закрывается отдельным ADR.
+7. Точные поля initial schema проектируются следующим implementation/design
+   шагом внутри принятых здесь invariants и write boundary.
 
-До явного принятия ADR-002 остаётся **ACTIVE DRAFT**.
+Evidence: `docs/research/PAYLOAD-POSTGRES-SPIKE-RESULTS.md`.
+
+Изменения этих базовых решений требуют явного пересмотра ADR.
