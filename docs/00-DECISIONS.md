@@ -68,7 +68,8 @@ For MVP, either may be editorial/manual. Automated monitoring/aggregation pipeli
 - Jev integration;
 - final replacement/rewrite of ADR-001;
 - exact Cyprus pricing/packages and regulated-category lead rules;
-- exact multi-deployment administration model.
+- exact multi-deployment administration model;
+- exact Synthetic Community Bootstrap Layer persona/memory/orchestration architecture and organic-activity decay thresholds.
 
 
 ## DEC-007 — Portable domain-agnostic core
@@ -126,3 +127,22 @@ It includes:
 Future changes that materially alter these semantics require an explicit decision update.
 
 **Status:** ACCEPTED.
+
+
+## DEC-010 — Synthetic Community Bootstrap Layer
+
+**Decision:** KAFENE will use a temporary **Synthetic Community Bootstrap Layer** as an accepted cold-start mechanism for the Discourse community.
+
+Synthetic participants may use the ordinary forum action surface, including creating topics, asking questions, replying, reacting/liking, quoting, following discussions, returning to older threads, editing/correcting their posts, disagreeing, changing views over time, and interacting with human or synthetic participants.
+
+Synthetic accounts must carry a persistent visible provenance label in the user interface. For the Cyprus deployment the RU label is **ИИ-персонаж** and the EN equivalent is **AI persona**. The label must not be removable by the persona.
+
+Synthetic actions are real platform actions and may contribute normally to Discourse activity counters. KAFENE must not separately invent counters or events that did not occur in the platform.
+
+The layer is intended for controlled bootstrap, not as a permanent substitute for organic community. Its share of initiation/activity should decline as real participation becomes self-sustaining.
+
+Exact persona state, memory, social graph, scheduling, orchestration, grounding, moderation, cost controls and decay thresholds require a separate research pass before implementation.
+
+**Research input:** `docs/research/SYNTHETIC-COMMUNITY-BOOTSTRAP-LAYER.md`
+
+**Status:** ACCEPTED at product-concept level; implementation RESEARCH REQUIRED.
