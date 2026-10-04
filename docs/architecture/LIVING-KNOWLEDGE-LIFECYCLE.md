@@ -156,19 +156,26 @@ Source не является просто URL.
 - active/inactive state;
 - freshness policy;
 - expected check interval;
-- max allowed staleness.
+- default max allowed staleness.
 
 Operational state и adapter configuration НЕ принадлежат Source editorial entity.
-Они хранятся в evidence/operations layer по `source_id`, включая:
+Они хранятся в evidence/operations layer по `source_id`.
 
-- active adapter/config;
-- last_checked_at;
-- last_successful_check_at;
-- current monitoring health;
-- transient failure counters;
-- runtime diagnostics.
+Freshness guarantee считается на уровне каждой SourceDependency / AnchorVersion.
+Operational `last_validated_at` dependency обновляется только если Source
+успешно получен, fail-closed проверки пройдены, anchor разрешился, релевантный
+fragment извлечён и его hash успешно вычислен.
 
-Точный набор полей определяется initial schema design.
+Частичный fetch, cookie-wall/anti-bot page или потеря хотя бы одного обязательного
+anchor не обновляют `last_validated_at` соответствующей dependency.
+
+Operational layer может хранить active adapter/config, source-level fetch
+metadata, transient failure counters и runtime diagnostics.
+
+Reader-facing freshness компонента определяется по худшему состоянию всех
+SourceDependency этого component.
+
+Точный набор editorial полей Source определяется initial schema design.
 
 ## 5. Jurisdiction, geography и audience разделены
 
@@ -218,7 +225,8 @@ Ancestor matching должен позволять правилу, действу
 
 Для каждого Source выбирается самый дешёвый надёжный механизм наблюдения.
 
-Предпочтительный порядок:
+Следующий порядок является **non-normative implementation preference**, а не
+частью domain contract:
 
 1. push / webhook / native event;
 2. official API;
@@ -267,7 +275,8 @@ Monitoring обязан различать как минимум четыре с
 1. релевантный content успешно получен и не изменился;
 2. релевантный content успешно получен и изменился;
 3. релевантный content невозможно надёжно получить/сопоставить;
-4. Source не проверялся успешно дольше допустимого freshness window.
+4. одна или несколько SourceDependency не валидировались успешно дольше
+   допустимого freshness window.
 
 Случаи 3 и 4 **никогда не интерпретируются как "unchanged"**.
 
@@ -279,18 +288,24 @@ Monitoring обязан различать как минимум четыре с
 - Source возвращает redirect, который не подтверждён как допустимый canonical move;
 - Source возвращает soft-404 или заглушку вместо ожидаемого content;
 - fetch/parse/normalization стабильно падают;
-- `last_successful_check_at` старше `max_allowed_staleness`;
+- `last_validated_at` dependency старше применимого `max_allowed_staleness`;
 - content shape становится несовместимым с текущим normalization/anchor profile.
 - anti-bot challenge / CAPTCHA;
 - cookie wall, закрывающий ожидаемый content;
 - maintenance/interstitial page даже при HTTP 200;
-- authentication/error shell вместо ожидаемой публичной страницы.
+- authentication/error shell вместо ожидаемой публичной страницы;
+- anti-bot/CAPTCHA challenge;
+- cookie-wall, закрывающий ожидаемый content;
+- maintenance/interstitial page даже при HTTP 200.
 
 Такие случаи создают отдельный high-risk MonitoringFinding и требуют human gate
 либо заранее определённого recovery workflow.
 
 Transient failures могут debounce/retry'иться, но retry/debounce window не может
 пересечь `max_allowed_staleness`.
+
+Один непрерывный failure episode имеет один открытый MonitoringFinding с
+append-only событиями, а не новый finding на каждый retry.
 
 Для одного непрерывного failure episode должен существовать один открытый
 MonitoringFinding с append-only событиями, а не новый finding на каждый retry.
@@ -384,9 +399,12 @@ Retention policy определяется отдельно, но действу�
 > evidence, на которое ссылается опубликованный Change или VerificationRecord,
 > не должно физически исчезать из-за обычной retention policy.
 
-Если storage lifecycle требует очистки, должна сохраняться как минимум
-неразрушаемая evidence tombstone/reference с content hash и audit metadata,
-достаточная для доказуемого lineage.
+Полное содержимое referenced evidence хранится минимум весь срок жизни
+соответствующего claim/verification/baseline плюс дополнительный период
+ответственности, определяемый отдельной legal/retention policy.
+
+Только после этого допускается переход к tombstone/reference с content hash и
+audit metadata, если это совместимо с legal/audit policy.
 
 Object storage provider этим документом не выбирается.
 
@@ -400,8 +418,13 @@ Source, Guide, GuideSection и SourceDependency, на которые ссыла�
 VerificationRecord или published Change, не hard-delete'ятся: используется
 deactivation/tombstone semantics.
 
-Evidence database role для immutable observations/events должна по возможности
-иметь INSERT-only/no-UPDATE privileges на соответствующие immutable tables.
+Evidence database role для immutable observations/events должна иметь
+INSERT-only/no-UPDATE/no-DELETE privileges на соответствующие immutable tables,
+кроме privileged retention/tombstone procedure.
+
+Evidence становится durable до создания editorial reference на него.
+Backup/restore guarantees evidence store не должны позволять появление dangling
+editorial→evidence references.
 
 ## 13. SourceDependency
 
@@ -418,15 +441,20 @@ Dependency должна позволять ответить:
 > "Что именно этот источник подтверждает и какая часть Guide зависит
 > от какой части источника?"
 
-## 14. Двустороннее якорение SourceDependency
+## 14. SourceAnchor, AnchorVersion и двустороннее якорение
 
-SourceDependency должна содержать как минимум два смысловых ориентира.
+Source-side anchor не является mutable полем SourceDependency.
 
-### Source-side anchor
+`SourceAnchor` принадлежит Source и может использоваться несколькими
+SourceDependency. Каждое изменение способа привязки создаёт immutable
+`AnchorVersion`.
 
-Какая область Source является релевантной.
+SourceDependency хранит ссылку на текущую AnchorVersion, а VerificationRecord
+сохраняет конкретную AnchorVersion, использованную при verification.
 
-Это может быть:
+### 14.1. Source-side anchor
+
+AnchorVersion определяет релевантную область Source. Возможные реализации:
 
 - DOM/selector region;
 - heading path;
@@ -435,55 +463,64 @@ SourceDependency должна содержать как минимум два с
 - text fragment;
 - semantic anchor;
 - fragment fingerprint;
-- комбинация нескольких способов.
+- комбинация способов.
 
-Точный anchor format НЕ замораживается до empirical spike.
+Точный anchor format не замораживается до empirical spike.
 
-Но замораживаются требования к контракту:
+Замораживаются invariants:
 
-- anchor имеет собственный stable identity;
-- anchor имеет `anchor_spec_version`;
-- хранится human-readable quote/excerpt или equivalent evidence fragment,
-  к которому anchor был привязан;
-- хранится hash релевантной области Source;
-- должна быть возможность отличить "fragment changed" от "anchor lost".
+- SourceAnchor имеет stable identity;
+- AnchorVersion immutable;
+- AnchorVersion имеет `anchor_spec_version`;
+- хранится human-readable excerpt/evidence fragment;
+- можно отличить `fragment changed` от `anchor lost`;
+- hashes под разными `anchor_spec_version` напрямую несравнимы.
 
-### Knowledge-side target
+### 14.2. Re-anchoring
 
-Какая часть canonical knowledge зависит от Source.
+Автоматическое re-anchor допустимо только если новый location даёт **точное
+совпадение ожидаемого fragment hash** при совместимых normalization и anchor
+spec versions.
 
-Например:
+Fuzzy/semantic re-anchor требует human gate.
 
-- GuideSection;
-- KeyFact;
-- applicability rule;
-- effective interval;
-- иной typed target.
+### 14.3. Knowledge-side target
+
+SourceDependency указывает на GuideSection, KeyFact interval, applicability rule
+или иной typed target.
+
+### 14.4. Graceful degradation
+
+Модель должна поддерживать fallback anchor
+`whole_normalized_main_content`.
+
+Если fine-grained anchors оказываются нестабильными, SourceAnchor может
+деградировать до всей нормализованной основной области без изменения формы
+VerificationRecord или SourceDependency.
 
 ## 15. Verified source baseline
 
-Для impact analysis недостаточно сравнивать только previous observation с current.
+Verified source baseline **не хранится mutable полем SourceDependency**.
 
-SourceDependency должна хранить или однозначно адресовать baseline релевантной
-области Source, с которой было синхронизировано последнее подтверждённое
-canonical knowledge state.
+Для dependency baseline выводится из последней действующей VerificationRecord,
+в manifest которой зафиксированы:
 
-Минимально требуется:
+- source_dependency_id;
+- source_anchor_version_id;
+- anchor_spec_version;
+- source_fragment_hash;
+- normalization_profile_version;
+- evidence / SourceObservation reference;
+- human-readable excerpt при наличии.
 
-- `last_verified_source_fragment_hash`;
-- `anchor_spec_version`;
-- ссылка на evidence/observation, использованную при verification;
-- human-readable excerpt/quote для audit/re-anchoring.
+Текущее состояние сравнивается с baseline из verification manifest, а не только
+с предыдущим observation.
 
-Вопрос:
+Hashes под разными `normalization_profile_version` или
+`anchor_spec_version` напрямую не сравниваются.
 
-> "Guide всё ещё согласован с Source?"
-
-должен решаться сравнением текущего anchor/fragment hash с verified baseline,
-а не только соседних observations.
-
-Это предотвращает накопление незамеченного drift после ошибочно dismissed
-finding или долгого review queue.
+При смене profile/spec baseline либо воспроизводится из сохранённого snapshot,
+либо требуется новая verification.
 
 ## 16. Aspect SourceDependency
 
@@ -506,6 +543,13 @@ finding или долгого review queue.
 `unclassified` допустим только как временное состояние создания/миграции и
 для risk policy приравнивается к максимальному риску. Low-risk automation для
 unclassified dependency запрещена.
+
+Aspect, dependency-specific max staleness и risk override имеют audit/version
+history. Понижение risk/aspect или увеличение допустимой staleness требует
+гейтируемого действия с audit record.
+
+Verification manifest сохраняет policy snapshot, действовавший в момент
+verification.
 
 ## 17. Impact analysis
 
@@ -530,11 +574,26 @@ impact.
 
 - `unanchored_main_content_change`.
 
-Если внутри основной содержательной области Source появилось/исчезло/изменилось
-содержимое вне существующих anchors, это не считается шумом автоматически.
+Если внутри нормализованной основной содержательной области Source
+появилось/исчезло/изменилось содержимое вне существующих anchors, это не
+считается шумом автоматически.
 
-Такое изменение создаёт persistent MonitoringFinding с отдельным priority/risk
-policy. Порог эскалации определяется после spike, но сама категория является
+Main-content extraction различает:
+
+- основное body/document content;
+- alerts/notices/banners с потенциальными официальными объявлениями;
+- технический chrome/navigation/analytics noise.
+
+Alerts/notices/banners не отбрасываются автоматически: они идут в отдельный
+monitored channel.
+
+Unanchored change создаёт persistent
+`unanchored_main_content_change` MonitoringFinding и маршрутизируется в
+Source-level очередь кандидатов для создания/расширения SourceDependency.
+
+Deterministic risk triggers §20 применяются и к unanchored findings.
+
+Порог priority/escalation определяется spike, но наличие этого канала является
 архитектурным invariant.
 
 Это защищает от false negative вида:
@@ -575,8 +634,6 @@ Workflow state развивается через append-only events:
 - reviewed;
 - linked_to_change;
 - closed.
-
-Точное имя operational record не фиксируется.
 
 Канонический термин: **MonitoringFinding**.
 
@@ -682,22 +739,8 @@ Source content не может сам расширить полномочия а
 
 ## 23. Будущее расширение auto-apply
 
-Запрет на automatic factual publishing не является вечным архитектурным
-ограничением.
-
-После накопления measured evidence отдельные классы изменений могут получить
-bounded auto-apply policy.
-
-Например:
-
-- однозначный official API field;
-- формализованная fee value;
-- deterministic deadline;
-- form version;
-- contact metadata.
-
-Переход к auto-apply должен опираться на measured false-positive/false-negative
-performance, а не только на confidence LLM.
+Bounded auto-apply для typed changes допускается только после measured evidence
+и отдельной policy; LLM confidence сам по себе такого права не даёт.
 
 ## 24. Guide
 
@@ -734,7 +777,8 @@ Initial Guide не должен превращаться в чрезмерно �
 - key facts;
 - applicability;
 - publication/localization data;
-- source dependencies через relations.
+- source dependencies через relations;
+- optional `implements_change_ids[]` на затронутых sections/KeyFact intervals.
 
 Большая часть prose остаётся rich text внутри GuideSection.
 
@@ -811,6 +855,9 @@ Initial schema не должна автоматически выбирать Pay
 
 KeyFact не должен иметь только одну "дату вступления".
 
+Verification component временного факта имеет identity
+`(KeyFact, interval)`. Добавление будущего interval не инвалидирует текущий.
+
 Значение имеет интервал действия:
 
 - `valid_from`;
@@ -846,9 +893,23 @@ presentation, а отображается по отдельной presentation p
 При gap между intervals значение считается **не определено**, а не "последнее
 известное".
 
+Для административных effective dates используется civil date в timezone/
+юрисдикции deployment, если Source не задаёт exact instant.
+
+Все consumers используют одну `as_of` semantics: website, search, Ask,
+generated outputs и monitoring logic.
+
+Generation input temporal facts строится из значений, разрешённых на конкретный
+`as_of`.
+
+Переход через `valid_from`/`valid_until` инвалидирует dependent generated
+output даже без новой записи в БД.
+
+Resolved `as_of` нельзя кэшировать дольше минимума из freshness projection TTL
+и ближайшей temporal boundary.
+
 `Change.effective_at` описывает событие изменения, а отображаемое factual
-value берётся из KeyFact interval. Change должен ссылаться на созданный/
-затронутый interval, если изменение относится к KeyFact.
+value берётся из KeyFact interval. Change ссылается на затронутый interval.
 
 ## 30. Future Fact promotion
 
@@ -907,7 +968,8 @@ Monitoring automation не является обязательным источ�
 Для Change необходимо различать как минимум:
 
 - `observed_at` — когда KAFENE обнаружил или получил информацию;
-- `verified_at` — когда изменение признано достоверным;
+- `verified_at` — производное время действующей VerificationRecord для Change,
+  а не отдельный mutable verification field;
 - `effective_at` — когда правило фактически начинает действовать;
 - `published_at` — когда KAFENE опубликовал Change.
 
@@ -938,10 +1000,16 @@ Canonical Change не переписывает историю задним чи�
 
 Исходная запись остаётся доступной в audit/history.
 
+Если generated artifact использует Change, его generation inputs включают
+Change component и correction/withdrawal/supersession state.
+
 Точная schema relationship определяется отдельно, но принцип "не переписывать
 историю" является invariant.
 
 После publication обычное редактирование canonical Change запрещено.
+
+Запреты update/delete published Change и hard-delete связанных audit entities
+покрываются automated tests.
 
 Исправление даже factual typo выполняется audit-preserving correction path.
 
@@ -971,7 +1039,6 @@ VerificationRecord является append-only манифестом того, *
 - hash_spec_version;
 - component_manifest[];
 - source_dependency_manifest[];
-- optional root_manifest_hash;
 - optional correction/revocation reference.
 
 ### 36.1. Component manifest
@@ -986,16 +1053,23 @@ VerificationRecord является append-only манифестом того, *
 
 Минимальные component types:
 
+- Guide title;
+- Guide summary;
 - GuideSection;
-- KeyFact;
-- общие нелокализованные поля, влияющие на смысл/applicability.
+- KeyFact interval;
+- applicability/shared semantic fields;
+- Change.
 
-Хеш locale representation формируется из:
+Каждое user-readable factual/editorial поле входит ровно в один verification
+component. Поле вне manifest считается непроверенным.
 
-- общих нелокализованных semantic fields;
-- плюс fields именно этой locale.
+Shared non-localized semantic fields представлены отдельными non-locale
+components и не дублируются по locales.
 
-Правка RU не должна автоматически инвалидировать EN, если общие поля и EN
+Locale verification включает locale components и ссылки на необходимые shared
+components.
+
+Правка RU не инвалидирует EN locale-specific components, если shared и EN
 components не изменились.
 
 ### 36.2. Source dependency manifest
@@ -1011,20 +1085,24 @@ components не изменились.
 - optional human-readable source excerpt;
 - verified component_id(s), которые эта dependency подтверждает.
 
+Manifest удостоверяет полный набор SourceDependency для каждого verified
+component.
+
+Новая обязательная dependency, которой нет в действующем manifest, переводит
+component в review.
+
+Evidence reference фиксирует именно snapshot/observation, который reviewer
+фактически видел и одобрил.
+
+Aspect/risk-policy snapshot dependency также сохраняется.
+
 Таким образом historical fact:
 
 > "на момент T компонент C был сверен с fragment H Source S"
 
 не зависит от изменяемых полей SourceDependency.
 
-### 36.3. Root manifest hash
-
-Общий/root hash может вычисляться из component manifest для integrity/audit,
-но **не является единственной гранулярностью verification**.
-
-Reader-facing verification и generation provenance вычисляются по компонентам.
-
-## 37. Append-only enforcement VerificationRecord
+### 37. Append-only enforcement VerificationRecord
 
 Append-only — не только документационная конвенция.
 
@@ -1111,9 +1189,8 @@ snapshot по новой версии profile, либо создаётся но�
 
 ## 41. Acknowledged source states
 
-Чтобы dismissed harmless change не создавал один и тот же finding при каждом
-следующем check, evidence/operations layer поддерживает append-only
-acknowledgement.
+Evidence/operations layer поддерживает append-only acknowledgement для уже
+оценённого harmless fragment state.
 
 Acknowledgement фиксирует:
 
@@ -1121,20 +1198,23 @@ Acknowledgement фиксирует:
 - source_anchor_version_id;
 - acknowledged_fragment_hash;
 - normalization_profile_version;
+- anchor_spec_version;
 - evidence reference;
+- `against_verification_id`;
 - acknowledged_at;
-- actor / deterministic reason.
+- human/deterministic actor and reason.
 
-Сравнение выполняется против множества допустимых ориентиров:
+Acknowledgement действительно только относительно verified baseline из
+`against_verification_id`.
 
-- verified baseline;
-- acknowledged harmless state.
+После новой verification старое acknowledgement перестаёт участвовать в
+suppression, если отдельная policy явно не переносит его.
 
-Любое новое fragment value, не совпадающее ни с одним действующим ориентиром,
-создаёт новый MonitoringFinding.
+Содержательное сравнение всегда идёт с verified baseline.
+Acknowledgement только подавляет повторное открытие того же harmless hash и не
+образует цепочку новых baseline.
 
-Acknowledgement не означает verification canonical knowledge и не заменяет
-VerificationRecord.
+LLM не может быть actor acknowledgement.
 
 ## 42. Monitoring freshness и verification разделены
 
@@ -1154,11 +1234,14 @@ Guide/section/KeyFact может быть historically verified, но требо
 
 Public presentation не должна скрывать monitoring uncertainty.
 
-Минимально для Guide/section/KeyFact должен быть вычислим один из состояний:
+Минимально для Guide/section/KeyFact вычисляется одно из состояний:
 
-- **Проверено**;
-- **Требует перепроверки**;
-- **Не удалось подтвердить актуальность**.
+- **Не проверено** — нет действующей VerificationRecord;
+- **Проверено** — verification действует и freshness подтверждена;
+- **Требует перепроверки** — verification была, но есть material/open finding
+  либо component/dependency mismatch;
+- **Не удалось подтвердить актуальность** — monitoring/freshness/evidence
+  недоступны или просрочены.
 
 Если evidence/freshness projection недоступна или старше допустимого TTL,
 состояние **не может по умолчанию деградировать в "Проверено"**.
@@ -1169,21 +1252,22 @@ Public presentation не должна скрывать monitoring uncertainty.
 
 ## 44. Независимая staleness-проверка
 
-Staleness не должна зависеть от того же scheduler/pipeline, отказ которого она
-должна обнаружить.
+Staleness не зависит от scheduler/pipeline, отказ которого она должна обнаружить.
 
-Условие:
+Для каждой SourceDependency:
 
-`now - last_successful_check_at > max_allowed_staleness`
+`now - last_validated_at > applicable_max_allowed_staleness`
 
-должно быть вычислимо независимо:
+вычисляется независимо от основного monitoring scheduler.
 
-- отдельным watchdog;
-- и/или read-time predicate;
-- и/или независимой health projection.
+Обязателен минимум один механизм **вне основного monitoring cluster**,
+например внешний heartbeat/watchdog.
 
-Если основной scheduler умер, staleness всё равно должна проявиться в
-operations и reader-facing state.
+Read-time predicate или отдельная health projection могут использоваться
+дополнительно.
+
+Если основной scheduler/worker cluster умер, dependency всё равно становится
+stale/fail-closed в пределах bounded TTL.
 
 ## 45. Evidence → website read path
 
@@ -1427,7 +1511,8 @@ cheap deterministic check
    manifest.
 6. Verification baseline выводится из append-only manifest, а не mutable поля.
 7. Source anchors являются versioned/append-only identities.
-8. Anchor contract имеет `anchor_spec_version`.
+8. Anchor contract имеет `anchor_spec_version` и fallback
+   `whole_normalized_main_content` без изменения формы manifest.
 9. Normalization contract имеет `normalization_profile_version`.
 10. Verification component hashes и generation input hashes разведены и имеют
     versioned canonical serialization.
@@ -1447,6 +1532,10 @@ cheap deterministic check
 23. VerificationRecord технически append-only.
 24. Source/Guide/GuideSection/SourceDependency с audit references используют
     tombstone/deactivation вместо hard delete.
+25. Verification component identity и manifest coverage.
+26. KeyFact interval identity и civil-date/`as_of` semantics.
+27. Operational monitoring state отделён от Source editorial entity.
+28. SourceAnchor/AnchorVersion lifecycle и exact-only automatic re-anchor.
 
 ## 60. Что НЕ нужно замораживать до empirical spike
 
@@ -1468,7 +1557,9 @@ cheap deterministic check
 - exact GuideSection storage shape после bounded Payload test;
 - thresholds для unanchored main-content findings;
 - transient failure debounce/retry parameters;
-- конкретная sandbox implementation technology.
+- конкретная sandbox implementation technology;
+- thresholds для unanchored main-content/alert findings;
+- transient failure debounce/retry parameters.
 
 ## 61. Falsifying monitoring spike
 
@@ -1505,7 +1596,9 @@ Synthetic/replay suite должен включать как минимум:
 - добавление/удаление requirement;
 - изменение eligibility wording;
 - новое material requirement в main content вне любого существующего anchor;
-- изменение только menu/footer/banner;
+- новая сумма/дата вне anchor;
+- material alert/banner announcement вне anchor;
+- изменение только технического menu/footer/analytics chrome;
 - перестановку DOM без semantic change;
 - anchor moved;
 - anchor missing;
@@ -1694,33 +1787,122 @@ Spike не должен доказывать заранее выбранную �
 - mutable `derived_from_verified` flag;
 - mutable `verified` boolean как единственный источник истины.
 
-## 70. Открытые вопросы после v4
+## 70. Non-goal: discovery новых Sources
 
-До канонизации остаются вопросы, которые должен разрешить monitoring spike
-или следующий schema-design pass:
+Этот lifecycle не гарантирует обнаружение совершенно новых официальных
+источников, которых ещё нет в Source registry.
 
-1. Конкретный формат source anchor.
-2. Конкретная GuideSection storage shape на Payload 3.90.2 + Postgres.
-3. Конкретные canonical serialization rules для verification hash spec.
-4. Конкретные canonical serialization rules для generation hash spec.
-5. Initial KeyFact representation.
-6. Evidence persistence topology.
-7. Snapshot retention для non-referenced evidence.
-8. Risk taxonomy после empirical data.
-9. Concrete monitoring adapters для первого deployment.
-10. Граница между cheap classifier и deeper reasoning model.
-11. Конкретная human review SLA policy.
-12. Порог, после которого отдельные typed facts могут получить auto-apply.
-13. Конкретная implementation технологии evidence→website freshness projection.
+Discovery новых sources, feeds, ведомств и документов является отдельным
+будущим workflow.
 
-## 71. Следующий шаг
+"90%+ automation" не означает 90% coverage неизвестного внешнего
+информационного пространства.
 
-До канонизации lifecycle:
+## 71. Открытые вопросы после v5
 
-1. внести узкое уточнение в ADR-002 о разделении editorial и evidence storage;
-2. провести bounded Payload test выбранной GuideSection representation;
-3. подготовить отдельный spike protocol с численными go/no-go thresholds;
-4. выбрать 5–10 реальных Cyprus sources и 3 Guides;
-5. провести live + historical replay + synthetic falsifying spike;
-6. на основании измерений зафиксировать anchor и normalization contracts;
-7. только затем канонизировать living-knowledge lifecycle.
+До CANONICAL остаются только вопросы, закрываемые schema-pass tests или
+monitoring spike:
+
+1. Конкретный source anchor format.
+2. GuideSection storage shape на Payload 3.90.2 + Postgres.
+3. Canonical serialization implementation для component/hash specs.
+4. Initial KeyFact storage representation.
+5. Evidence persistence topology.
+6. Snapshot retention для non-referenced evidence.
+7. Risk taxonomy/thresholds после empirical data.
+8. Monitoring adapters первого deployment.
+9. Граница cheap classifier / deeper reasoning model.
+
+Operations launch policy — отдельный gate и не блокирует CANONICAL этого
+architecture contract.
+
+## 72. Условия перед CANONICAL
+
+### 72.1. До spike protocol
+
+Текстом должны быть закрыты:
+
+- dependency-level freshness;
+- SourceAnchor / immutable AnchorVersion lifecycle;
+- unanchored main-content/alert channel;
+- отсутствие противоречий baseline/manifest/terminology;
+- узкая поправка ADR-002 о разделении editorial и evidence storage.
+
+Первые четыре закрыты настоящей v5. Поправка ADR-002 остаётся отдельным
+коротким prerequisite.
+
+### 72.2. Schema-pass tests
+
+Это не monitoring spike. Проверяются contracts модели и Payload behavior:
+
+1. GuideSection shape:
+   - atomic publication Guide;
+   - stable section ID при save/reorder;
+   - locale independence;
+   - drafts/versioning;
+   - manifest hashing.
+2. Canonical serialization determinism:
+   - key ordering;
+   - Unicode normalization;
+   - null/absence;
+   - rich-text serialization.
+3. Local invalidation:
+   - RU change не инвалидирует EN;
+   - section change затрагивает только её и dependent artifacts.
+4. Вычислимость `derived_from_verified`.
+5. KeyFact `as_of`, timezone/date semantics и boundary invalidation.
+6. Запреты update/delete:
+   - VerificationRecord;
+   - published Change;
+   - immutable evidence tables;
+   - hard-delete referenced editorial entities.
+7. Chaos test:
+   - остановить scheduler;
+   - остановить/просрочить freshness projection;
+   - reader state становится fail-closed в пределах TTL.
+8. Manifest coverage:
+   - каждое user-readable field покрыто ровно одним component;
+   - новая SourceDependency после verification требует review.
+
+### 72.3. Monitoring spike
+
+Пороги фиксируются до запуска.
+
+Проверяются:
+
+- recall на historical replay и synthetic mutations;
+- unanchored material changes;
+- все fail-closed scenarios;
+- anchor-loss/re-anchoring;
+- fallback к `whole_normalized_main_content`;
+- normalization noise;
+- доля checks без LLM;
+- human-review load;
+- affected-dependency detection.
+
+### 72.4. Не условия CANONICAL, а launch gates
+
+До production launch capability обязательны, но architecture canonical не
+блокируют:
+
+- конкретные review SLA;
+- canary reviewer statistics на достаточном объёме;
+- acceptable cost per Source/material Change;
+- projection behavior под production load;
+- конкретная sandbox technology;
+- operational staffing/ownership review queue.
+
+## 73. Initial implementation principle
+
+До empirical evidence система консервативна в publish и агрессивна в automation
+до publish gate.
+
+Человек получает максимально маленькое проверяемое решение:
+
+> "Вот официальный источник.
+> Вот verified baseline.
+> Вот текущее evidence.
+> Вот что изменилось.
+> Вот какой component KAFENE затронут.
+> Вот предлагаемое исправление.
+> Approve / Reject."
