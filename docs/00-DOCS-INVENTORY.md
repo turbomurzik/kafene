@@ -22,9 +22,10 @@ This inventory is the registry of durable project documentation. A file being ne
 | `docs/research/ENGINE-COMPARISON.md` | RESEARCH INPUT | Historical pre-spike Discourse vs XenForo comparison; live evidence and accepted decisions take precedence. |
 | `docs/research/JEV-RERANKING-SPIKE.md` | DEFERRED | Future reranking research hypothesis. Not current architecture. |
 | `docs/research/KAFENE-INFORMATION-ARCHITECTURE-RESEARCH.md` | RESEARCH INPUT | Research into IA, categories, tags, and EN/RU structure; not canonical until separate validation. |
+| `docs/research/PAYLOAD-POSTGRES-SPIKE-RESULTS.md` | EVIDENCE | Pinned Payload 3.90.2 + Postgres 16 executable spike; UUID, relations, localization, per-locale publication and versions; result 6/6. |
 | `docs/architecture/ADR-001-FORUM-ENGINE.md` | CANONICAL | Принятый boundary contract между KAFENE website/content layer и Discourse community/forum substrate. |
 | `docs/architecture/WEBSITE-DISCOURSE-INTEGRATION-CONTRACT.md` | CANONICAL | Принятый P0 production contract для read-only server-side получения публичных Discourse community metadata, access boundary, cache/freshness и graceful degradation. |
-| `docs/architecture/ADR-002-CMS-CONTENT-STORAGE.md` | ACTIVE DRAFT | Выбор Payload + Postgres и инварианты structured editorial knowledge model; stable ID и locale publication/fallback остаются blockers до канонизации. |
+| `docs/architecture/ADR-002-CMS-CONTENT-STORAGE.md` | CANONICAL | Принятая CMS/content-storage архитектура: Payload + Postgres, UUID identity, localization/publication, provenance/verification и P0 content-model invariants. |
 | `docs/operations/agent_execution_discipline_adoption.md` | OPERATIONS | KAFENE adoption boundary for the pinned execution standard, reconciled to current governance. |
 | `docs/operations/git-handoff.md` | OPERATIONS | Git/worktree handoff procedure. |
 | `docs/operations/documentation_discipline_adoption.md` | OPERATIONS | KAFENE adoption of the documentation discipline standard. |
@@ -61,12 +62,13 @@ For repository/product governance, the current control set is deliberately small
 5. `docs/product/HOME-INTERACTION-MODEL.md` for homepage/dashboard behavior
 6. `docs/architecture/ADR-001-FORUM-ENGINE.md` for the website↔Discourse boundary
 7. `docs/architecture/WEBSITE-DISCOURSE-INTEGRATION-CONTRACT.md` for the P0 production integration contract
+8. `docs/architecture/ADR-002-CMS-CONTENT-STORAGE.md` for CMS/content storage and structured editorial knowledge
 
 The reconciled PRD is the current ACTIVE DRAFT product contract for the first
 useful release, but it is not yet CANONICAL. ADR-001 now canonically defines the
 system boundary between website and Discourse. The P0 production website↔Discourse integration contract is now CANONICAL.
-There is not yet a frontend architecture, CMS/content storage architecture,
-or Ask KAFENE architecture.
+CMS/content storage architecture is now canonical. There is not yet a frontend
+architecture or Ask KAFENE architecture.
 
 ## Cleanup / closure candidates
 
@@ -80,5 +82,3 @@ The following need later rewrite, supersession, validation, or explicit promotio
 Historical research/evidence files should remain preserved unless a separate
 archive/cleanup task explicitly authorizes moving them.
 
-
-- `docs/research/PAYLOAD-POSTGRES-SPIKE-RESULTS.md` — **EVIDENCE**. Фактический pinned-version Payload 3.90.2 + Postgres 16 spike: UUID, relations, localization, per-locale publication, versions и known-risk query probe; результат 6/6.
