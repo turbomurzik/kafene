@@ -132,8 +132,8 @@ await check('EN can publish while RU remains draft/missing', async () => {
   assert.notEqual(statusFor(ru, 'ru'), 'published', 'RU unexpectedly became published')
 })
 
-await check('Incomplete RU locale cannot be published', async () => {
-  await payload.update({
+await check('Incomplete RU draft saves, but RU locale cannot be published', async () => {
+  const incomplete = await payload.update({
     collection: 'guides',
     id: guide.id,
     locale: 'ru',
@@ -144,7 +144,9 @@ await check('Incomplete RU locale cannot be published', async () => {
       verificationState: 'unverified',
     },
     overrideAccess: true,
-  })
+  }) as Record<string, unknown>
+
+  assert.equal(incomplete.title, `RU title only ${suffix}`)
 
   let rejected = false
   try {
