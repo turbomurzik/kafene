@@ -81,7 +81,7 @@ Postgres schema/database плюс object storage.
 - snapshots;
 - normalization metadata;
 - deterministic diffs;
-- operational change work items;
+- MonitoringFindings;
 - triage events;
 - monitoring failures;
 - processing/audit metadata.
@@ -127,7 +127,7 @@ Source
 → определить затронутые SourceDependency
 → применить deterministic risk floor
 → при необходимости AI analysis
-→ operational change work item
+→ MonitoringFinding
 → noise / dismiss / review / verified material change
 → Change
 → изменение canonical Guide
@@ -154,13 +154,19 @@ Source не является просто URL.
 - jurisdiction органа;
 - geographic/deployment scope;
 - active/inactive state;
-- monitoring strategy;
 - freshness policy;
 - expected check interval;
-- max allowed staleness;
+- max allowed staleness.
+
+Operational state и adapter configuration НЕ принадлежат Source editorial entity.
+Они хранятся в evidence/operations layer по `source_id`, включая:
+
+- active adapter/config;
 - last_checked_at;
 - last_successful_check_at;
-- monitoring health.
+- current monitoring health;
+- transient failure counters;
+- runtime diagnostics.
 
 Точный набор полей определяется initial schema design.
 
@@ -230,6 +236,10 @@ Monitoring adapter заменяем.
 Source identity и knowledge history не должны зависеть от конкретного crawler
 или watcher.
 
+Source identity также переживает смену URL. История canonical/previous URLs
+сохраняется; redirect сам по себе не создаёт новую Source entity. Подтверждённая
+миграция URL оформляется как изменение адреса существующего Source.
+
 ## 8. Дешёвый слой до AI
 
 LLM не должен вызываться на каждую плановую проверку Source.
@@ -271,9 +281,24 @@ Monitoring обязан различать как минимум четыре с
 - fetch/parse/normalization стабильно падают;
 - `last_successful_check_at` старше `max_allowed_staleness`;
 - content shape становится несовместимым с текущим normalization/anchor profile.
+- anti-bot challenge / CAPTCHA;
+- cookie wall, закрывающий ожидаемый content;
+- maintenance/interstitial page даже при HTTP 200;
+- authentication/error shell вместо ожидаемой публичной страницы.
 
-Такие случаи создают отдельный high-risk operational finding и требуют
-human gate либо заранее определённого recovery workflow.
+Такие случаи создают отдельный high-risk MonitoringFinding и требуют human gate
+либо заранее определённого recovery workflow.
+
+Transient failures могут debounce/retry'иться, но retry/debounce window не может
+пересечь `max_allowed_staleness`.
+
+Для одного непрерывного failure episode должен существовать один открытый
+MonitoringFinding с append-only событиями, а не новый finding на каждый retry.
+
+Автозакрытие fail-closed finding допустимо только:
+- детерминированно, если релевантный fragment снова успешно разрешён и его hash
+  совпадает с verified/acknowledged baseline;
+- либо человеком.
 
 LLM не может закрыть fail-closed finding как "изменений нет".
 
@@ -365,6 +390,19 @@ Retention policy определяется отдельно, но действу�
 
 Object storage provider этим документом не выбирается.
 
+Retention также распространяется на snapshots/evidence, используемые активным
+verified baseline или acknowledgement.
+
+Append-only triage events, dismissals и verification provenance являются audit
+records и не подпадают под обычную snapshot cleanup policy.
+
+Source, Guide, GuideSection и SourceDependency, на которые ссылаются evidence,
+VerificationRecord или published Change, не hard-delete'ятся: используется
+deactivation/tombstone semantics.
+
+Evidence database role для immutable observations/events должна по возможности
+иметь INSERT-only/no-UPDATE privileges на соответствующие immutable tables.
+
 ## 13. SourceDependency
 
 SourceDependency связывает canonical knowledge с доказательной базой.
@@ -449,7 +487,7 @@ finding или долгого review queue.
 
 ## 16. Aspect SourceDependency
 
-Dependency может дополнительно классифицировать поддерживаемый aspect.
+Каждая SourceDependency обязана иметь классифицированный `aspect`.
 
 Рабочие примеры:
 
@@ -464,6 +502,10 @@ Dependency может дополнительно классифицироват�
 - general.
 
 Конкретная taxonomy остаётся изменяемой до monitoring spike.
+
+`unclassified` допустим только как временное состояние создания/миграции и
+для risk policy приравнивается к максимальному риску. Low-risk automation для
+unclassified dependency запрещена.
 
 ## 17. Impact analysis
 
@@ -483,6 +525,22 @@ knowledge-side target.
 
 При этом потеря anchor сама по себе является high-risk finding, а не отсутствием
 impact.
+
+Кроме anchored impact существует отдельная обязательная категория:
+
+- `unanchored_main_content_change`.
+
+Если внутри основной содержательной области Source появилось/исчезло/изменилось
+содержимое вне существующих anchors, это не считается шумом автоматически.
+
+Такое изменение создаёт persistent MonitoringFinding с отдельным priority/risk
+policy. Порог эскалации определяется после spike, но сама категория является
+архитектурным invariant.
+
+Это защищает от false negative вида:
+
+> "На страницу добавили новое обязательное требование, которого раньше не было
+> и поэтому не существовало anchor."
 
 ## 18. Operational change work item
 
@@ -520,13 +578,9 @@ Workflow state развивается через append-only events:
 
 Точное имя operational record не фиксируется.
 
-Рабочие варианты:
+Канонический термин: **MonitoringFinding**.
 
-- DetectedChange;
-- ChangeCandidate;
-- MonitoringFinding.
-
-Она остаётся operational, а не editorial entity.
+MonitoringFinding остаётся operational record, а не editorial entity.
 
 ## 19. Deterministic risk floor
 
@@ -591,6 +645,19 @@ LLM, анализирующая Source, не должна получать по�
 
 Результат LLM на этом этапе — только structured analysis / draft proposal /
 classification в пределах policy.
+
+Минимальные технические controls:
+
+- output LLM schema-validated;
+- analysis model не имеет tool-доступа к записи/publish side effects;
+- hidden/invisible text (например display:none/zero-width artifacts) удаляется
+  normalization layer и логируется как anomaly;
+- source excerpts в reviewer UI явно рендерятся как untrusted evidence;
+- fetch/render/PDF parsers работают в sandbox без application secrets;
+- egress ограничен необходимыми destinations;
+- redirect chain проверяется против policy/allowlist;
+- reviewer UI показывает baseline и current evidence рядом, чтобы снизить риск
+  манипулятивного diff framing.
 
 Source content не может сам расширить полномочия агента.
 
@@ -689,19 +756,31 @@ SourceDependency должна иметь возможность указыват
 - title/body локализованы;
 - SourceDependency ссылается на GuideSection identity, а не на translated heading.
 
-Initial schema не должна использовать Payload localized blocks как обязательную
-основу Guide sections.
+Initial schema не должна автоматически выбирать Payload localized blocks.
 
-Причина: localized complex structures в Payload 3.x уже выделены как отдельный
-risk-class в ADR-002.
+До schema freeze сравниваются как минимум два shape:
 
-Предпочтительный initial direction — отдельная структурированная GuideSection
-collection/child entity с localized scalar/rich-text fields и stable relation
-к Guide, если pinned-version spike подтверждает корректность drafts/versioning/
-localization для такого shape.
+1. нелокализованный массив/структура sections внутри Guide, где каждая строка
+   имеет stable non-localized section ID, а текстовые листья локализованы;
+2. отдельная GuideSection collection/child entity со stable relation к Guide.
 
-До schema freeze нужен отдельный bounded test именно для выбранной GuideSection
-реализации на Payload 3.90.2 + Postgres.
+Сравнение обязано проверить:
+
+- атомарную публикацию Guide;
+- невозможность частично опубликовать несогласованный набор sections;
+- draft/versioning behavior;
+- locale independence;
+- стабильность section identity при save/reorder;
+- совместимость с verification component manifest;
+- Payload 3.90.2 + Postgres behavior.
+
+Отдельная collection не принимается только потому, что она "чище":
+если она разрушает атомарную публикацию Guide, это blocker.
+
+Нелокализованный массив с localized leaves — отдельный shape и не должен
+автоматически приравниваться к problematic localized blocks из upstream issue.
+
+До schema freeze нужен bounded comparative test обоих вариантов.
 
 ## 28. KeyFact
 
@@ -748,6 +827,28 @@ presentation, а отображается по отдельной presentation p
 
 Перекрывающиеся интервалы для одного logical KeyFact должны либо быть явно
 разрешены доменной policy, либо отклоняться validation.
+
+Семантика времени фиксируется заранее:
+
+- для правовых/административных effective dates используется civil date в
+  timezone/юрисдикции соответствующего deployment, если Source не задаёт точный
+  instant;
+- exact instant используется только когда он действительно дан/нужен.
+
+Все consumers используют одну общую `as_of` semantics:
+
+- website;
+- search;
+- Ask KAFENE;
+- generated snippets;
+- monitoring impact logic.
+
+При gap между intervals значение считается **не определено**, а не "последнее
+известное".
+
+`Change.effective_at` описывает событие изменения, а отображаемое factual
+value берётся из KeyFact interval. Change должен ссылаться на созданный/
+затронутый interval, если изменение относится к KeyFact.
 
 ## 30. Future Fact promotion
 
@@ -840,31 +941,88 @@ Canonical Change не переписывает историю задним чи�
 Точная schema relationship определяется отдельно, но принцип "не переписывать
 историю" является invariant.
 
-## 36. VerificationRecord
+После publication обычное редактирование canonical Change запрещено.
 
-Verification не должна быть mutable boolean flag на Guide.
+Исправление даже factual typo выполняется audit-preserving correction path.
 
-Используется append-only VerificationRecord.
+Change должен иметь собственную verification/evidence provenance по тем же
+общим принципам: published Change не считается подтверждённым только из-за
+самого факта публикации.
+
+Если generated artifact использует Change (например блок "Что изменилось"),
+его GenerationRecord обязан включать component inputs Change, включая
+correction/withdrawal state, чтобы withdrawal/supersession делали artifact stale.
+
+## 36. VerificationRecord как манифест
+
+VerificationRecord является append-only манифестом того, **что именно было
+проверено и против какого evidence**.
+
+Он не должен быть одной записью с единственным общим hash на весь Guide.
 
 Рабочая структура:
 
 - verification_id;
 - entity_id;
 - locale;
-- `verification_content_hash`;
-- `hash_spec_version`;
+- verification_type;
 - verified_at;
-- verified_by;
-- verification_method;
-- optional evidence references.
+- verified_by_actor_ref;
+- hash_spec_version;
+- component_manifest[];
+- source_dependency_manifest[];
+- optional root_manifest_hash;
+- optional correction/revocation reference.
 
-Текущее content representation считается verified, если существует действующая
-VerificationRecord, у которой:
+### 36.1. Component manifest
 
-- entity/locale совпадают;
-- `hash_spec_version` соответствует поддерживаемой verification hash spec;
-- `verification_content_hash` совпадает с hash текущего проверяемого
-  canonical content.
+Для каждой проверяемой части canonical knowledge сохраняется отдельный компонент:
+
+- component_id;
+- component_type;
+- component_hash;
+- locale, если компонент локализован;
+- hash_spec_version.
+
+Минимальные component types:
+
+- GuideSection;
+- KeyFact;
+- общие нелокализованные поля, влияющие на смысл/applicability.
+
+Хеш locale representation формируется из:
+
+- общих нелокализованных semantic fields;
+- плюс fields именно этой locale.
+
+Правка RU не должна автоматически инвалидировать EN, если общие поля и EN
+components не изменились.
+
+### 36.2. Source dependency manifest
+
+Для каждой зависимости, использованной при verification, манифест фиксирует:
+
+- source_dependency_id;
+- source_anchor_version_id;
+- anchor_spec_version;
+- source_fragment_hash;
+- normalization_profile_version;
+- evidence / SourceObservation reference;
+- optional human-readable source excerpt;
+- verified component_id(s), которые эта dependency подтверждает.
+
+Таким образом historical fact:
+
+> "на момент T компонент C был сверен с fragment H Source S"
+
+не зависит от изменяемых полей SourceDependency.
+
+### 36.3. Root manifest hash
+
+Общий/root hash может вычисляться из component manifest для integrity/audit,
+но **не является единственной гранулярностью verification**.
+
+Reader-facing verification и generation provenance вычисляются по компонентам.
 
 ## 37. Append-only enforcement VerificationRecord
 
@@ -873,21 +1031,29 @@ Append-only — не только документационная конвен�
 Для VerificationRecord должны быть технически запрещены обычные update/delete
 операции через Payload access control / hooks / permissions.
 
-Коррекция ошибочной VerificationRecord выполняется новой записью, которая явно
-ссылается на предыдущую как correction/revocation, а не её редактированием.
+Коррекция ошибочной VerificationRecord выполняется новой append-only записью,
+которая явно ссылается на предыдущую как correction/revocation.
 
 Это поведение должно быть покрыто automated test.
 
+`verified_by_actor_ref` должен быть устойчивым audit reference, а не копией
+отображаемого имени.
+
+Если связанный пользователь позже удалён или анонимизирован по privacy/GDPR
+policy, verification history не должна терять целостность: actor identity может
+перейти в tombstoned/anonymized representation без изменения самой
+VerificationRecord.
+
 ## 38. Verification hash contract
 
-`verification_content_hash` вычисляется не из произвольного raw JSON.
+Component hashes вычисляются не из произвольного raw JSON.
 
 Нужен versioned canonical serialization contract.
 
 Он должен определять как минимум:
 
-- какие поля входят в verification;
-- locale;
+- какие fields входят в каждый component type;
+- locale semantics;
 - порядок collections/sections;
 - canonical key ordering;
 - Unicode normalization;
@@ -898,66 +1064,148 @@ Append-only — не только документационная конвен�
 Каждая VerificationRecord хранит `hash_spec_version`.
 
 Содержимое конкретной hash spec может эволюционировать, но изменение spec
-не должно молча инвалидировать всю существующую историю.
+не должно молча превращать всю существующую историю в "непроверенную".
 
 Migration/reverification policy при новой `hash_spec_version` определяется
 отдельно.
 
-## 39. Автоматическая invalidation verification
+## 39. Действующая verification
 
-При изменении canonical localized content, входящего в текущую hash spec,
-меняется `verification_content_hash`.
+Component считается verified, если существует действующая VerificationRecord,
+в которой:
 
-Старая VerificationRecord остаётся в истории, но больше не подтверждает
-текущее содержание.
+- entity и locale соответствуют;
+- component_id присутствует в manifest;
+- component_hash совпадает с hash текущего canonical component;
+- hash_spec_version поддерживается;
+- VerificationRecord не отозвана/corrected так, что проверка больше не действует.
 
-Следовательно:
+Guide в целом может иметь mixed verification state:
 
-- не требуется вручную удалять старую verification;
-- история проверки сохраняется;
-- изменение RU не инвалидирует EN, если EN verification hash не изменился.
+- часть sections verified;
+- часть sections stale/unverified;
+- отдельные KeyFact требуют review.
 
-## 40. Verification и monitoring freshness разделены
+Это позволяет reader-facing state вычислять на уровне section/KeyFact, а не
+сбрасывать весь Guide из-за локальной правки.
+
+## 40. Verified source baseline выводится из verification manifest
+
+SourceDependency **не хранит mutable `last_verified_source_fragment_hash` как
+источник истины**.
+
+Последний verified source baseline выводится из последней действующей
+VerificationRecord, в которой соответствующая dependency была использована.
+
+Baseline включает:
+
+- source_fragment_hash;
+- normalization_profile_version;
+- source_anchor_version_id;
+- evidence reference.
+
+Hash разных normalization profile versions напрямую не сравниваются.
+
+При смене normalization profile baseline либо пересчитывается из сохранённого
+snapshot по новой версии profile, либо создаётся новая verification.
+
+## 41. Acknowledged source states
+
+Чтобы dismissed harmless change не создавал один и тот же finding при каждом
+следующем check, evidence/operations layer поддерживает append-only
+acknowledgement.
+
+Acknowledgement фиксирует:
+
+- source_dependency_id;
+- source_anchor_version_id;
+- acknowledged_fragment_hash;
+- normalization_profile_version;
+- evidence reference;
+- acknowledged_at;
+- actor / deterministic reason.
+
+Сравнение выполняется против множества допустимых ориентиров:
+
+- verified baseline;
+- acknowledged harmless state.
+
+Любое новое fragment value, не совпадающее ни с одним действующим ориентиром,
+создаёт новый MonitoringFinding.
+
+Acknowledgement не означает verification canonical knowledge и не заменяет
+VerificationRecord.
+
+## 42. Monitoring freshness и verification разделены
 
 Verification отвечает:
 
-> "Это содержание было проверено?"
+> "Какие canonical components были проверены и против какого evidence?"
 
 Monitoring отвечает:
 
-> "После проверки появились сигналы, что источник мог измениться или monitoring
-> потерял способность это доказать?"
+> "После проверки появились сигналы, что Source изменился или monitoring больше
+> не способен доказать его актуальность?"
 
-Guide может одновременно быть:
+Guide/section/KeyFact может быть historically verified, но требовать review из-за
+нового MonitoringFinding или fail-closed condition.
 
-- historically verified;
-- published;
-- но нуждаться в review из-за нового source change или fail-closed finding.
+## 43. Reader-facing state
 
-Monitoring state не заменяет verification state.
+Public presentation не должна скрывать monitoring uncertainty.
 
-## 41. Что видит читатель при открытом finding
-
-Public presentation не должна скрывать открытый monitoring risk.
-
-Минимально система должна уметь показать для затронутого Guide/section/key fact:
-
-- когда content последний раз был verified;
-- что после verification обнаружено изменение/проблема мониторинга;
-- что актуальность сейчас проверяется.
-
-Рабочее reader-facing состояние:
+Минимально для Guide/section/KeyFact должен быть вычислим один из состояний:
 
 - **Проверено**;
 - **Требует перепроверки**;
-- **Мониторинг источника недоступен/просрочен**.
+- **Не удалось подтвердить актуальность**.
+
+Если evidence/freshness projection недоступна или старше допустимого TTL,
+состояние **не может по умолчанию деградировать в "Проверено"**.
+
+Для reader path отсутствие подтверждения freshness трактуется fail-closed.
 
 Точный UI wording определяется frontend/product layer.
 
-High-risk finding не должен оставлять пользователю безусловную маркировку
-"актуально/проверено" для затронутой части knowledge.
+## 44. Независимая staleness-проверка
 
-## 42. Review SLA
+Staleness не должна зависеть от того же scheduler/pipeline, отказ которого она
+должна обнаружить.
+
+Условие:
+
+`now - last_successful_check_at > max_allowed_staleness`
+
+должно быть вычислимо независимо:
+
+- отдельным watchdog;
+- и/или read-time predicate;
+- и/или независимой health projection.
+
+Если основной scheduler умер, staleness всё равно должна проявиться в
+operations и reader-facing state.
+
+## 45. Evidence → website read path
+
+Сайт не читает raw evidence tables напрямую.
+
+Нужна KAFENE-owned read projection/health boundary, которая предоставляет
+минимальный freshness/monitoring state для editorial components.
+
+Эта projection должна:
+
+- связывать SourceDependency с последним monitoring state;
+- учитывать open MonitoringFinding;
+- учитывать staleness predicate;
+- иметь bounded freshness TTL;
+- fail-closed при собственной недоступности или просрочке.
+
+Если projection недоступна/просрочена, reader-facing состояние становится
+"не удалось подтвердить актуальность", а не "Проверено".
+
+Конкретная cache/storage technology не фиксируется.
+
+## 46. Review SLA
 
 Human-gated findings должны иметь review SLA, зависящий от risk class.
 
@@ -970,67 +1218,71 @@ Initial architectural floor:
 - просроченный finding сохраняет/усиливает reader-facing stale state;
 - queue health и median/max review latency измеряются.
 
-Конкретные часы/дни не замораживаются этим документом до monitoring spike,
-но production без заданного SLA не допускается.
+Конкретные часы/дни остаются до spike.
 
-## 43. Locale synchronization state
+## 47. Locale verification вместо отдельной locale-sync state machine
 
-Поскольку официальный Source может существовать на одном языке, а Guide —
-на нескольких, нужно различать:
+Отдельная locale-sync state machine не вводится.
 
-- canonical source language;
-- locale representation Guide;
-- состояние синхронизации локали с актуальным verified knowledge state.
+VerificationRecord использует `verification_type`, например:
 
-RU representation может быть опубликована и переведена из EN/EL source,
-но должна иметь понятный provenance.
+- `source_check`;
+- `translation_check`.
 
-Точная locale-sync state machine определяется отдельно.
+Для translation check сохраняется:
 
-## 44. Generation lineage
+- translated locale component manifest;
+- hash базовой locale/components, против которых перевод был проверен;
+- соответствующие source/evidence references при необходимости.
+
+Если базовая locale/components изменились, translation verification автоматически
+перестаёт быть актуальной по hash mismatch.
+
+## 48. Generation lineage
 
 Lineage generated content не должен зависеть исключительно от Payload revision ID.
 
-Primary lineage key для генератора:
+Primary lineage key для generator:
 
 - `generation_input_hash`.
 
-Он вычисляется из **конкретного набора canonical localized inputs**, которые
-прочитал generator.
+Generation input строится из тех же canonical component primitives, которые
+используются verification manifest.
 
-Это другой hash contract, чем verification hash.
+Если generated artifact требует verified input, условие означает:
 
-## 45. Generation hash contract
+> каждый canonical component, входящий в generation input, присутствует в
+> действующей VerificationRecord с совпадающим component_hash.
+
+Таким образом "derived from verified" является вычислимым условием.
+
+## 49. Generation hash contract
 
 GenerationRecord должен хранить:
 
 - `generation_input_hash`;
 - `hash_spec_version`;
+- перечень component_id/component_hash, входивших в generation;
 - generator/pipeline identifier;
 - generator version;
 - model metadata при необходимости;
 - generated_at;
 - locale;
 - artifact/field reference;
-- optional VerificationRecord reference.
+- optional VerificationRecord references.
 
-`generation_input_hash` вычисляется по versioned canonical serialization spec,
-определяющей конкретные входы данного generator/pipeline.
+`generation_input_hash` вычисляется по versioned canonical serialization spec.
 
-Изменение RU не делает EN artifact stale, если EN generator inputs не изменились.
-
-Изменение нерелевантного metadata не обязано инвалидировать artifact.
+Изменение RU не делает EN artifact stale, если его component inputs не изменились.
 
 Payload revision/version ID может сохраняться как reference/debug metadata,
 но не является главным ключом актуальности.
 
-## 46. GenerationRecord вместо универсального DerivedContent
+## 50. GenerationRecord вместо универсального DerivedContent
 
-Универсальная сущность DerivedContent сейчас не вводится.
+Универсальная сущность DerivedContent не вводится.
 
-Причина:
-
-под одним названием смешиваются разные вещи:
+Разные outputs:
 
 - summary;
 - translation draft;
@@ -1038,50 +1290,37 @@ Payload revision/version ID может сохраняться как reference/d
 - search embedding;
 - homepage snippet;
 - Ask answer;
-- newsletter text.
+- newsletter text
 
-Они имеют разный lifecycle и разные места хранения.
+имеют разные lifecycle и места хранения.
 
-Для любого хранимого generated artifact достаточно общего GenerationRecord /
+Для любого хранимого generated artifact достаточно GenerationRecord /
 generation metadata.
 
-## 47. Generated output не является source of truth
+## 51. Generated output не является source of truth
 
 Generated content всегда производен от canonical knowledge.
 
-Например:
+Generated artifact не становится независимым canonical factual source.
 
-Guide canonical fields
-→ generated summary
-
-или:
-
-Guide canonical locale
-→ translation draft другой locale.
-
-Generated artifact не должен становиться независимым canonical factual source.
-
-## 48. derived_from_verified не хранится как mutable flag
-
-Состояние "derived from verified" вычисляется из provenance.
-
-GenerationRecord может ссылаться на VerificationRecord, которая была действительна
-для соответствующего verification content/hash context при generation.
+## 52. derived_from_verified не хранится как mutable flag
 
 Булев flag `derived_from_verified` не нужен.
 
-## 49. Политика генерации и переводов
+Состояние вычисляется из generation component manifest и действующих
+VerificationRecord.
 
-Рабочий принцип:
+## 53. Политика генерации и переводов
 
-- автоматическая публикация generated representation допускается только там,
-  где отдельная policy явно разрешает это для verified canonical input;
-- generation из unverified input может выполняться как draft/internal artifact;
-- machine-generated translation сама по себе не получает verified status;
-- **в P0 machine-generated translation автоматически НЕ публикуется**;
-- публикация перевода требует отдельного editorial action.
+Generation из unverified input может выполняться как draft/internal artifact.
 
-## 50. Стоимость pipeline как first-class operational metric
+Machine-generated translation сама по себе не получает verified status.
+
+В P0 machine-generated translation автоматически **не публикуется**:
+публикация перевода требует отдельного editorial action.
+
+
+## 54. Стоимость pipeline как first-class operational metric
 
 Поскольку monitoring должен масштабироваться до сотен и тысяч Sources,
 стоимость processing должна измеряться с первого production implementation.
@@ -1102,7 +1341,7 @@ GenerationRecord может ссылаться на VerificationRecord, кото
 
 Cost metadata относится к operations/analytics, а не editorial domain.
 
-## 51. Cost firewall
+## 55. Cost firewall
 
 Архитектурный порядок processing:
 
@@ -1116,7 +1355,7 @@ cheap deterministic check
 
 Нельзя использовать дорогой model pass для unchanged Source checks.
 
-## 52. KAFENE-owned state
+## 56. KAFENE-owned state
 
 Независимо от внешних инструментов KAFENE владеет:
 
@@ -1133,7 +1372,7 @@ cheap deterministic check
 - editorial decisions;
 - audit trail.
 
-## 53. Replaceable infrastructure
+## 57. Replaceable infrastructure
 
 Заменяемыми implementation components остаются:
 
@@ -1154,7 +1393,7 @@ cheap deterministic check
 
 Замена такого компонента не должна требовать миграции canonical knowledge model.
 
-## 54. Требуемая поправка к ADR-002
+## 58. Требуемая поправка к ADR-002
 
 Перед реализацией monitoring layer ADR-002 должен быть уточнён:
 
@@ -1175,32 +1414,41 @@ cheap deterministic check
 При этом любые изменения editorial entities по-прежнему проходят через
 поддерживаемую Payload write boundary.
 
-## 55. Что нужно заморозить до implementation
+## 59. Что нужно заморозить до implementation
 
-Следующие invariants считаются высокостоимостными для поздней миграции и должны
-быть закрыты до production implementation:
+Следующие invariants считаются высокостоимостными для поздней миграции:
 
 1. Разделение editorial и evidence/operations storage.
-2. Immutable/content-addressed raw evidence.
-3. Evidence retention: referenced evidence не исчезает.
-4. Версия normalization profile как часть evidence.
-5. SourceDependency имеет source-side anchor и knowledge-side target.
-6. Anchor имеет `anchor_spec_version` и verified baseline fragment/hash.
-7. Verification lineage основан на `verification_content_hash`.
-8. Generation lineage основан на отдельном `generation_input_hash`.
-9. Оба hash contracts имеют `hash_spec_version` и canonical serialization.
-10. Verification является append-only record, технически защищённой от update/delete.
-11. Publication, verification и monitoring freshness разделены.
-12. Change имеет observed_at, verified_at, effective_at, published_at.
-13. Change corrections/supersession append-only.
-14. KeyFact value имеет validity interval.
-15. LLM не может понижать deterministic risk floor.
-16. Monitoring fail-closed.
-17. Locality иерархична.
-18. Jurisdiction, geographic applicability и audience различаются.
-19. Machine-generated translations в P0 не публикуются автоматически.
+2. Source editorial entity не содержит runtime monitoring status/adapter config.
+3. Immutable/content-addressed raw evidence.
+4. Retention активных baselines/acknowledgements и evidence, на которое ссылаются
+   VerificationRecord/Change.
+5. VerificationRecord имеет component manifest и source dependency/evidence
+   manifest.
+6. Verification baseline выводится из append-only manifest, а не mutable поля.
+7. Source anchors являются versioned/append-only identities.
+8. Anchor contract имеет `anchor_spec_version`.
+9. Normalization contract имеет `normalization_profile_version`.
+10. Verification component hashes и generation input hashes разведены и имеют
+    versioned canonical serialization.
+11. Generation lineage строится из component inputs.
+12. Publication, verification и monitoring freshness разделены.
+13. Staleness является предикатом от часов и обнаруживается независимо от
+    основного scheduler.
+14. Категория `unanchored_main_content_change` существует всегда.
+15. SourceDependency aspect обязателен; unclassified = high risk.
+16. Change имеет observed_at, verified_at, effective_at, published_at.
+17. Published Change immutable; corrections/withdrawals/supersession append-only.
+18. KeyFact использует validity interval и общую `as_of` semantics.
+19. Locality иерархична.
+20. Jurisdiction, geographic applicability и audience различаются.
+21. LLM не может понижать deterministic risk floor.
+22. Monitoring fail-closed.
+23. VerificationRecord технически append-only.
+24. Source/Guide/GuideSection/SourceDependency с audit references используют
+    tombstone/deactivation вместо hard delete.
 
-## 56. Что НЕ нужно замораживать до empirical spike
+## 60. Что НЕ нужно замораживать до empirical spike
 
 До первого реального monitoring spike остаются гибкими:
 
@@ -1217,9 +1465,12 @@ cheap deterministic check
 - orchestration engine;
 - non-referenced evidence retention period;
 - конкретные review SLA values;
-- exact GuideSection storage shape после bounded Payload test.
+- exact GuideSection storage shape после bounded Payload test;
+- thresholds для unanchored main-content findings;
+- transient failure debounce/retry parameters;
+- конкретная sandbox implementation technology.
 
-## 57. Falsifying monitoring spike
+## 61. Falsifying monitoring spike
 
 Перед замораживанием anchor и normalization design требуется empirical spike.
 
@@ -1244,7 +1495,7 @@ Live monitoring недостаточен сам по себе, потому чт
 3. **Synthetic mutation suite** сохранённых snapshots для контролируемой проверки
    recall и fail-closed behavior.
 
-## 58. Обязательные synthetic/failure scenarios
+## 62. Обязательные synthetic/failure scenarios
 
 Synthetic/replay suite должен включать как минимум:
 
@@ -1253,6 +1504,7 @@ Synthetic/replay suite должен включать как минимум:
 - изменение срока;
 - добавление/удаление requirement;
 - изменение eligibility wording;
+- новое material requirement в main content вне любого существующего anchor;
 - изменение только menu/footer/banner;
 - перестановку DOM без semantic change;
 - anchor moved;
@@ -1267,7 +1519,7 @@ Synthetic/replay suite должен включать как минимум:
 - form/document link replaced;
 - conflicting source evidence.
 
-## 59. Метрики spike
+## 63. Метрики spike
 
 Нужно измерить:
 
@@ -1287,9 +1539,31 @@ Synthetic/replay suite должен включать как минимум:
 14. average processing cost per Source;
 15. cost per material Change;
 16. median/max human review latency;
-17. долю routine work, реально автоматизируемую без factual auto-publish.
+17. human-review quality через canary findings;
+18. долю routine work, реально автоматизируемую без factual auto-publish.
 
-## 60. Go / no-go criteria spike
+## 63.1. Quality control human gate
+
+Review quality измеряется не только скоростью.
+
+В human review queue должны периодически подмешиваться canary findings:
+
+- заранее известный material change;
+- заранее известный noise/non-material case.
+
+Reviewer не должен заранее знать, какой item является canary.
+
+Метрики:
+
+- material-canary detection rate;
+- noise-canary rejection rate;
+- systematic reviewer error patterns;
+- review latency.
+
+Reviewer UI должен показывать verified baseline и current evidence side-by-side,
+а не только AI summary/рекомендацию.
+
+## 64. Go / no-go criteria spike
 
 До старта spike должны быть зафиксированы численные acceptance thresholds.
 
@@ -1313,7 +1587,7 @@ Synthetic/replay suite должен включать как минимум:
 Если ключевой threshold не достигнут, architecture assumption считается
 неподтверждённой и пересматривается.
 
-## 61. Кандидаты источников для spike
+## 65. Кандидаты источников для spike
 
 Нужен разнообразный набор, а не десять похожих HTML pages.
 
@@ -1330,7 +1604,7 @@ Synthetic/replay suite должен включать как минимум:
 
 Конкретные URLs выбираются отдельным bounded task.
 
-## 62. Цель spike
+## 66. Цель spike
 
 Spike не должен доказывать заранее выбранную архитектуру.
 
@@ -1346,7 +1620,7 @@ Spike не должен доказывать заранее выбранную �
 - где необходим human gate?
 - реальна ли цель 90%+ routine automation на фактических данных?
 
-## 63. Ограничение цели 90%+
+## 67. Ограничение цели 90%+
 
 "90%+ automation" означает автоматизацию рутинной работы pipeline:
 
@@ -1366,7 +1640,7 @@ Spike не должен доказывать заранее выбранную �
 
 Доля automatic factual publishing должна определяться evidence после эксплуатации.
 
-## 64. Initial implementation principle
+## 68. Initial implementation principle
 
 До получения empirical evidence система должна быть консервативной в publish
 и агрессивной в automation до publish gate.
@@ -1385,7 +1659,7 @@ Spike не должен доказывать заранее выбранную �
 > Вот evidence.
 > Approve / Reject."
 
-## 65. Итоговая минимальная модель
+## 69. Итоговая минимальная модель
 
 После architecture review минимальный durable состав выглядит так.
 
@@ -1403,7 +1677,7 @@ Spike не должен доказывать заранее выбранную �
 
 - SourceObservation;
 - raw snapshot reference;
-- operational change work item + append-only triage events;
+- MonitoringFinding + append-only triage events;
 - monitoring/process metadata.
 
 ### Generated content
@@ -1416,11 +1690,11 @@ Spike не должен доказывать заранее выбранную �
 
 - универсальный DerivedContent;
 - глобальная Fact ontology;
-- DetectedChange как editorial domain entity;
+- MonitoringFinding как editorial domain entity (он остаётся operational record);
 - mutable `derived_from_verified` flag;
 - mutable `verified` boolean как единственный источник истины.
 
-## 66. Открытые вопросы после v3
+## 70. Открытые вопросы после v4
 
 До канонизации остаются вопросы, которые должен разрешить monitoring spike
 или следующий schema-design pass:
@@ -1430,16 +1704,16 @@ Spike не должен доказывать заранее выбранную �
 3. Конкретные canonical serialization rules для verification hash spec.
 4. Конкретные canonical serialization rules для generation hash spec.
 5. Initial KeyFact representation.
-6. Locale synchronization representation.
-7. Evidence persistence topology.
-8. Snapshot retention для non-referenced evidence.
-9. Risk taxonomy после empirical data.
-10. Concrete monitoring adapters для первого deployment.
-11. Граница между cheap classifier и deeper reasoning model.
-12. Конкретная human review SLA policy.
-13. Порог, после которого отдельные typed facts могут получить auto-apply.
+6. Evidence persistence topology.
+7. Snapshot retention для non-referenced evidence.
+8. Risk taxonomy после empirical data.
+9. Concrete monitoring adapters для первого deployment.
+10. Граница между cheap classifier и deeper reasoning model.
+11. Конкретная human review SLA policy.
+12. Порог, после которого отдельные typed facts могут получить auto-apply.
+13. Конкретная implementation технологии evidence→website freshness projection.
 
-## 67. Следующий шаг
+## 71. Следующий шаг
 
 До канонизации lifecycle:
 
