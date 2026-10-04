@@ -26,6 +26,7 @@ This inventory is the registry of durable project documentation. A file being ne
 | `docs/architecture/ADR-001-FORUM-ENGINE.md` | CANONICAL | Принятый boundary contract между KAFENE website/content layer и Discourse community/forum substrate. |
 | `docs/architecture/WEBSITE-DISCOURSE-INTEGRATION-CONTRACT.md` | CANONICAL | Принятый P0 production contract для read-only server-side получения публичных Discourse community metadata, access boundary, cache/freshness и graceful degradation. |
 | `docs/architecture/ADR-002-CMS-CONTENT-STORAGE.md` | CANONICAL | Принятая CMS/content-storage архитектура: Payload + Postgres, UUID identity, localization/publication, provenance/verification и P0 content-model invariants. |
+| `docs/architecture/LIVING-KNOWLEDGE-LIFECYCLE.md` | ACTIVE DRAFT | Living-knowledge lifecycle: Guide, Source, observations, semantic dependencies, detected changes, canonical Changes, verification/freshness and derived AI content. |
 | `docs/operations/agent_execution_discipline_adoption.md` | OPERATIONS | KAFENE adoption boundary for the pinned execution standard, reconciled to current governance. |
 | `docs/operations/git-handoff.md` | OPERATIONS | Git/worktree handoff procedure. |
 | `docs/operations/documentation_discipline_adoption.md` | OPERATIONS | KAFENE adoption of the documentation discipline standard. |
