@@ -274,6 +274,8 @@ Discourse API.
 
 ### Cold start
 
+Forum activity may include real Discourse actions made by accounts belonging to the accepted Synthetic Community Bootstrap Layer. Synthetic accounts retain their visible AI-persona provenance; the homepage does not reclassify them as human users.
+
 До накопления собственной аналитики используется фиксированное детерминированное правило:
 
 1. свежесть последней активности;
@@ -738,7 +740,7 @@ Dedup выполняется **между всеми homepage blocks**, а не 
 
 ### Абсолютный day-zero floor
 
-Если editorial content ещё вообще не опубликован, homepage не должна симулировать наполненность.
+Если editorial content ещё вообще не опубликован, homepage не должна выдумывать editorial/knowledge content для заполнения пустоты.
 
 В этом состоянии:
 
@@ -747,8 +749,9 @@ Dedup выполняется **между всеми homepage blocks**, а не 
 - `/guides` существует и показывает честный empty state, если гайдов ещё нет;
 - city/locality navigation показывается только для уже настроенных deployment localities;
 - forum-driven blocks могут показываться, если Discourse доступен и реально содержит подходящие данные;
+- forum-driven blocks may include topics/replies/activity created by visibly labeled Synthetic Community Bootstrap personas because those are actual Discourse events;
 - пустые Blocks 1 / 2 / 4 / 5 скрываются;
-- synthetic evergreen, fake activity и автоматически выдуманные карточки запрещены.
+- автоматически выдуманные editorial cards, guide opens, page views or counters that did not arise from actual product events remain prohibited.
 
 Это технический абсолютный floor, а не критерий достаточности контента для публичного запуска.
 
@@ -950,7 +953,9 @@ MVP не требует сложной analytics platform.
 - внешней vector database;
 - custom Ask KAFENE;
 - Jev;
-- autonomous content generation.
+- autonomous editorial/knowledge-card generation.
+
+The accepted Synthetic Community Bootstrap Layer is an explicit exception for the Discourse community surface; it is not permission to synthesize arbitrary homepage/knowledge data.
 
 ---
 
@@ -962,7 +967,8 @@ MVP не требует сложной analytics platform.
 - Discourse blocks: hide при недоступности API.
 - Hero/search: остаётся основной стабильной interaction.
 - Layout: reflow без пустых секций.
-- Не подставлять synthetic live data ради визуального наполнения.
+- Не фабриковать homepage live data, которого нет в source systems.
+- Реальная Discourse activity от маркированных AI personas может отображаться как forum activity и участвовать в обычных platform counters.
 
 ---
 
