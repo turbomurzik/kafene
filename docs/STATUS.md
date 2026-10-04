@@ -63,6 +63,12 @@ See `docs/00-DECISIONS.md` for exact accepted decisions.
   as historical research inputs;
 - ADR-001 принят как CANONICAL boundary contract между website и Discourse;
 - P0 website↔Discourse integration contract принят как CANONICAL.
+- ADR-002 принят как CANONICAL: Payload + Postgres являются CMS/content-storage
+  stack для structured editorial knowledge.
+- Payload/Postgres spike на закреплённом стеке завершён с результатом 6/6;
+  UUID, relations, versions, localization и P0 per-locale publication semantics
+  подтверждены.
+- P0 initial content model не использует localized blocks.
 
 ## Активный архитектурный долг
 
@@ -71,7 +77,7 @@ ADR-001 принят и больше не является открытым до
 До frontend implementation остаются:
 
 - frontend/runtime architecture decision;
-- website CMS/content-storage и editorial workflow decision;
+- initial structured content schema/editorial workflow implementation design;
 - exact search architecture across website and forum content;
 - broader domain/integration semantics for `topic_space_id`;
 - production IA mapping after separate validation.
@@ -89,9 +95,12 @@ Current product documents:
 - `docs/product/PRODUCT-REQUIREMENTS.md` — ACTIVE DRAFT, reconciled current PRD
 - `docs/product/MONETIZATION-MODEL.md` — ACTIVE DRAFT
 
-ADR-001 и P0 website↔Discourse integration contract приняты как CANONICAL.
+ADR-001, P0 website↔Discourse integration contract и ADR-002 CMS/content-storage
+приняты как CANONICAL.
+
 Следующая активная архитектурная задача должна быть выбрана из оставшихся
-frontend/runtime, CMS/content-storage, search и IA mapping решений.
+frontend/runtime, search и IA mapping решений либо из initial content schema
+design как bounded implementation-design task.
 
 ## Deferred / not active
 
@@ -108,7 +117,6 @@ frontend/runtime, CMS/content-storage, search и IA mapping решений.
 ## Open product / architecture decisions
 
 - production frontend/site technology;
-- exact content-management model for standalone KAFENE guides;
 - exact search architecture;
 - exact city landing/filter semantics and module set;
 - production IA mapping after validation;
@@ -124,7 +132,7 @@ implementation.
 Допустимые кандидаты:
 
 - frontend/runtime;
-- CMS/content-storage и editorial workflow;
+- initial content schema/editorial workflow design;
 - search architecture;
 - production IA mapping.
 
