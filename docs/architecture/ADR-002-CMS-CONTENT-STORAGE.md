@@ -64,13 +64,48 @@ Admin UI не является отдельным source of truth и не дол
 
 ## Решение 3. Write boundary
 
-Запись и изменение editorial content выполняются только через поддерживаемую
-Payload write boundary: Payload Local API или Payload HTTP/API layer.
+### Editorial domain
+
+Запись и изменение editorial content/domain entities выполняются только через
+поддерживаемую Payload write boundary: Payload Local API или Payload HTTP/API
+layer.
 
 Прямые SQL writes в Payload-generated/content tables запрещены.
 
 Это требование сохраняет validation, hooks, revisions/versioning, lifecycle
 semantics и schema invariants.
+
+К editorial domain относятся canonical knowledge и его управляемые сущности,
+включая Guide, Journey, Collection/Hub, Change, Source, Locality, TopicSpace,
+VerificationRecord и другие editorial entities, добавленные последующими
+каноническими решениями.
+
+### Evidence / operations domain
+
+Требование Payload write boundary **не распространяется на всю операционную
+информацию KAFENE**.
+
+Monitoring/evidence data может храниться в отдельном persistence layer
+(например отдельной Postgres schema/database и object storage), если она не
+является canonical editorial knowledge.
+
+К этому слою могут относиться, в частности:
+
+- SourceObservation;
+- raw snapshots;
+- normalized snapshots;
+- deterministic diffs;
+- MonitoringFinding;
+- append-only triage/workflow events;
+- monitoring telemetry;
+- fetch/render/parser diagnostics;
+- processing/cost metadata.
+
+Этот слой не получает права на прямые записи в Payload-generated/content tables.
+
+Любое изменение canonical editorial knowledge, подготовленное monitoring,
+automation или AI pipeline, по-прежнему должно пройти через поддерживаемую
+Payload write boundary и соответствующие validation/hooks/policy gates.
 
 Search, Ask KAFENE, Changes automation и другие будущие consumers должны
 работать через KAFENE-side server/content boundary, а не проектироваться вокруг
@@ -83,6 +118,14 @@ Payload Postgres должен быть отделён от Discourse storage.
 Допустимы отдельная database в том же Postgres instance или отдельный Postgres
 instance. Недопустима shared application database, где website content layer
 и Discourse разделяют одну schema/ownership boundary.
+
+Evidence/operations persistence также должна иметь отдельную ownership boundary
+от Payload content tables. Она может использовать тот же физический Postgres
+instance только при явном разделении database/schema/roles и запрете direct
+writes в editorial tables.
+
+Raw snapshots/object evidence могут храниться вне Postgres в отдельном object
+storage. Это не меняет authority Payload над editorial domain.
 
 ## Решение 5. Content-model invariants
 
@@ -349,6 +392,8 @@ Major version Payload не обновляется автоматически т�
 - search architecture;
 - Ask KAFENE architecture;
 - exact Changes automation;
+- exact evidence/operations storage topology;
+- exact snapshot/object-storage provider;
 - exact relation cardinality;
 - plugins/extensions;
 - deployment-specific content taxonomy.
@@ -429,6 +474,9 @@ ADR-002 принят как CANONICAL на основании следующих
    закрывается отдельным ADR.
 7. Точные поля initial schema проектируются следующим implementation/design
    шагом внутри принятых здесь invariants и write boundary.
+8. Payload write boundary относится к editorial domain, а monitoring/evidence
+   data может храниться отдельно при сохранении storage isolation и запрета
+   direct writes в Payload content tables.
 
 Evidence: `docs/research/PAYLOAD-POSTGRES-SPIKE-RESULTS.md`.
 
