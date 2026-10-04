@@ -22,7 +22,6 @@ const Guides: CollectionConfig = {
   versions: {
     drafts: {
       localizeStatus: true,
-      validate: true,
     },
     maxPerDoc: 20,
   },
