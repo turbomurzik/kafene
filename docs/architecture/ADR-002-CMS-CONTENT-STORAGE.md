@@ -227,9 +227,14 @@ Verification state и `last_verified` не должны автоматическ
 определённой проверяемой единице, если будущая schema задаст иной эквивалентный
 механизм.
 
-Редактирование localized editorial content должно инвалидировать verification
-для затронутой локали, если отдельно не доказано, что изменение не влияет на
-проверенное содержание.
+Редактирование содержательного localized editorial content должно
+инвалидировать verification для затронутой локали, если отдельно не доказано,
+что изменение не влияет на проверенное содержание.
+
+Это является обязательным implementation invariant KAFENE. Конкретный Payload
+hook/механизм сброса verification определяется при реализации initial schema и
+не требует отдельного pre-canonization spike, поскольку это KAFENE-owned
+business rule, а не зависимость от специфической возможности Payload.
 
 ### Publication state и verification state
 
@@ -278,10 +283,9 @@ Postgres-adapter сценария KAFENE:
 3. RU нельзя опубликовать при незаполненных обязательных RU localized fields.
 4. Publish/unpublish RU не меняет publication state EN.
 5. Version history сохраняет независимое состояние локалей.
-6. Изменение RU localized content инвалидирует RU verification, не EN.
-7. Public filtering/access-control запросы корректно работают для single-locale
+6. Public filtering/access-control запросы корректно работают для single-locale
    и multi-locale retrieval patterns, используемых KAFENE.
-8. Если initial schema использует localized blocks или другие complex localized
+7. Если initial schema использует localized blocks или другие complex localized
    structures, отдельно проверяется сохранность данных при draft/version/publish
    цикле.
 
