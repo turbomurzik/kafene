@@ -1554,7 +1554,6 @@ cheap deterministic check
 - orchestration engine;
 - non-referenced evidence retention period;
 - конкретные review SLA values;
-- exact GuideSection storage shape после bounded Payload test;
 - thresholds для unanchored main-content findings;
 - transient failure debounce/retry parameters;
 - конкретная sandbox implementation technology;
@@ -1804,7 +1803,8 @@ Discovery новых sources, feeds, ведомств и документов я
 monitoring spike:
 
 1. Конкретный source anchor format.
-2. GuideSection storage shape на Payload 3.90.2 + Postgres.
+2. ~~GuideSection storage shape на Payload 3.90.2 + Postgres.~~ **CLOSED:
+   array shape selected by 10/10 schema-pass evidence.**
 3. Canonical serialization implementation для component/hash specs.
 4. Initial KeyFact storage representation.
 5. Evidence persistence topology.
@@ -1835,12 +1835,13 @@ architecture contract.
 
 Это не monitoring spike. Проверяются contracts модели и Payload behavior:
 
-1. GuideSection shape:
+1. GuideSection shape — **PASS / CLOSED**:
    - atomic publication Guide;
    - stable section ID при save/reorder;
    - locale independence;
    - drafts/versioning;
    - manifest hashing.
+   Evidence: `docs/research/GUIDE-SECTION-SCHEMA-PASS-RESULTS.md`.
 2. Canonical serialization determinism:
    - key ordering;
    - Unicode normalization;
