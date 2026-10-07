@@ -597,6 +597,7 @@ async function sharedState(id: string) {
 
 async function runConflictingSharedDraftProbe(firstPublish: Locale) {
   const f = await createFreshGuide(`conflict-${firstPublish}-first`)
+
   await payload.update({
     collection: 'invalidation-guides',
     id: f.id,
@@ -606,6 +607,22 @@ async function runConflictingSharedDraftProbe(firstPublish: Locale) {
     data: { applicability: 'shared-A-from-en' },
     overrideAccess: true,
   } as any)
+  const afterA = await sharedState(f.id)
+  assert.deepEqual(
+    {
+      draftEn: afterA.draftEn.value,
+      draftRu: afterA.draftRu.value,
+      publishedEn: afterA.publishedEn.value,
+      publishedRu: afterA.publishedRu.value,
+    },
+    {
+      draftEn: 'shared-A-from-en',
+      draftRu: 'all-residents',
+      publishedEn: 'all-residents',
+      publishedRu: 'all-residents',
+    },
+  )
+
   await payload.update({
     collection: 'invalidation-guides',
     id: f.id,
@@ -618,19 +635,57 @@ async function runConflictingSharedDraftProbe(firstPublish: Locale) {
 
   const beforePublish = await sharedState(f.id)
   console.log(`CHAR  conflict ${firstPublish}-first before publish:`, JSON.stringify(beforePublish))
+  assert.deepEqual(
+    {
+      draftEn: beforePublish.draftEn.value,
+      draftRu: beforePublish.draftRu.value,
+      publishedEn: beforePublish.publishedEn.value,
+      publishedRu: beforePublish.publishedRu.value,
+    },
+    {
+      draftEn: 'shared-B-from-ru',
+      draftRu: 'shared-B-from-ru',
+      publishedEn: 'all-residents',
+      publishedRu: 'all-residents',
+    },
+  )
 
   await publishLocale(f.id, firstPublish)
   const afterFirst = await sharedState(f.id)
   console.log(`CHAR  conflict ${firstPublish}-first after first publish:`, JSON.stringify(afterFirst))
+  assert.deepEqual(
+    {
+      draftEn: afterFirst.draftEn.value,
+      draftRu: afterFirst.draftRu.value,
+      publishedEn: afterFirst.publishedEn.value,
+      publishedRu: afterFirst.publishedRu.value,
+    },
+    {
+      draftEn: 'shared-B-from-ru',
+      draftRu: 'shared-B-from-ru',
+      publishedEn: 'shared-B-from-ru',
+      publishedRu: 'shared-B-from-ru',
+    },
+  )
 
   const secondPublish: Locale = firstPublish === 'en' ? 'ru' : 'en'
   await publishLocale(f.id, secondPublish)
   const afterSecond = await sharedState(f.id)
   console.log(`CHAR  conflict ${firstPublish}-first after second publish:`, JSON.stringify(afterSecond))
-
-  // Characterization probe only until a committed-tree run establishes exact observed states.
-  assert.equal(afterFirst.publishedEn.value, afterFirst.publishedRu.value)
-  assert.equal(afterSecond.publishedEn.value, afterSecond.publishedRu.value)
+  assert.deepEqual(
+    {
+      draftEn: afterSecond.draftEn.value,
+      draftRu: afterSecond.draftRu.value,
+      publishedEn: afterSecond.publishedEn.value,
+      publishedRu: afterSecond.publishedRu.value,
+    },
+    {
+      draftEn: 'shared-B-from-ru',
+      draftRu: 'shared-B-from-ru',
+      publishedEn: 'shared-B-from-ru',
+      publishedRu: 'shared-B-from-ru',
+    },
+  )
 }
 
 await check('observed: conflicting shared drafts, EN publish first', async () => {
@@ -684,7 +739,7 @@ async function runReorderCase(label: string) {
   ]
 
   const expectedEnVisible = expectedVisibleAfterPermutation(visibleIdsV0(beforeEn), permutation)
-  const expectedRuVisible = expectedVisibleAfterPermutation(visibleIdsV0(beforeRu), permutation)
+  const expectedRuVisible = visibleIdsV0(beforeRu)
   if (!assert.deepEqual) throw new Error('unreachable')
   if (JSON.stringify(expectedEnVisible) !== JSON.stringify(visibleIdsV0(beforeEn))) {
     expected.push(viewKey('draft', 'en', i.visibleEn))
@@ -729,9 +784,8 @@ await check('identity reorder is a no-op', async () => {
   assertExactChanged(snapshotDiff(before, after), [])
 })
 
-await check('moving EN-visible/RU-invisible section can leave RU visible order unchanged', async () => {
+await check('observed: EN reorder after RU-only invisibility publication is ignored', async () => {
   const f = await createFreshGuide('invisible-reorder')
-  const i = ids(f.id, f.sectionIds)
 
   const ru = await readGuide(f.id, 'ru', 'draft')
   await payload.update({
@@ -754,11 +808,13 @@ await check('moving EN-visible/RU-invisible section can leave RU visible order u
   await assertCleanBaseline(f)
 
   const before = await snapshotAll(f.id)
+  const beforeEn = await readGuide(f.id, 'en', 'draft')
   const beforeRu = await readGuide(f.id, 'ru', 'draft')
-  const beforeRuIds = visibleIdsV0(beforeRu)
-  const en = await readGuide(f.id, 'en', 'draft')
-  const rows = en.sections as Row[]
-  const reversed = [...rows].reverse()
+  const beforeEnIds = (beforeEn.sections as Row[]).map((row) => String(row.id))
+  const beforeRuVisibleIds = visibleIdsV0(beforeRu)
+  const targetRows = [...(beforeEn.sections as Row[])].reverse()
+  const targetIds = targetRows.map((row) => String(row.id))
+  assert.notDeepEqual(targetIds, beforeEnIds)
 
   await payload.update({
     collection: 'invalidation-guides',
@@ -766,7 +822,7 @@ await check('moving EN-visible/RU-invisible section can leave RU visible order u
     locale: 'en',
     fallbackLocale: false,
     draft: true,
-    data: reversed.map((row) => ({
+    data: targetRows.map((row) => ({
       id: row.id,
       sectionKey: row.sectionKey,
       heading: row.heading,
@@ -776,11 +832,18 @@ await check('moving EN-visible/RU-invisible section can leave RU visible order u
   } as any)
 
   const after = await snapshotAll(f.id)
-  assertExactChanged(snapshotDiff(before, after), [
-    viewKey('draft', 'en', i.structure),
-    viewKey('draft', 'en', i.visibleEn),
-  ])
-  assert.deepEqual(visibleIdsV0(await readGuide(f.id, 'ru', 'draft')), beforeRuIds)
+  const afterEn = await readGuide(f.id, 'en', 'draft')
+  const afterEnIds = (afterEn.sections as Row[]).map((row) => String(row.id))
+  assertExactChanged(snapshotDiff(before, after), [])
+  assert.deepEqual(afterEnIds, beforeEnIds)
+  assert.deepEqual(visibleIdsV0(await readGuide(f.id, 'ru', 'draft')), beforeRuVisibleIds)
+
+  console.log('CHAR  ignored EN reorder after RU invisibility publish:', JSON.stringify({
+    beforeEnIds,
+    targetIds,
+    afterEnIds,
+    ruVisibleIds: beforeRuVisibleIds,
+  }))
 })
 
 await check('EN-only section: shared changes, RU visible stays stable; RU row representation is characterized', async () => {
