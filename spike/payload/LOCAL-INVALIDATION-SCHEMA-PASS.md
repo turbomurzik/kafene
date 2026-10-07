@@ -100,9 +100,23 @@ shape и уже закрытого canonical serialization substrate.
 - publication конкретной locale может продвинуть shared state сразу в обе published locale projections;
 - та же publication может синхронизировать shared draft state другой locale;
 - pending shared change, внесённый через другую locale, может быть продвинут publication текущей locale;
-- conflict probes EN=A / RU=B выполняются в обоих publication orders и логируют draft/published values + hashes до первой publication, после первой и после второй;
-- exact conflict outcome (winner/loser preservation/order dependence) считается установленным только после committed-tree run и owner review;
+- conflict probes EN=A / RU=B выполняются в обоих publication orders;
+- committed clean run на `2c0ba785c2704692aeff1039878e2cede7e3bbfd` показал: после EN=A затем RU=B обе draft projections уже содержат B до publication; A не сохраняется как отдельный pending shared draft;
+- первая publication (EN или RU) публикует B в обе locale projections; вторая publication ничего не меняет;
+- для этого сценария наблюдаемая semantics = **last shared draft write wins before publication; publication order irrelevant**;
 - unpublish semantics также относятся к Payload-specific characterization, а не к универсальному product contract.
+
+## Observed structural edge case: reorder ignored after locale-specific invisibility publication
+
+Committed clean run на `2c0ba785c2704692aeff1039878e2cede7e3bbfd` дал `diff = []` для EN reorder после того, как RU section был сделан fixture-v0 invisible и RU был опубликован.
+
+Это не трактуется как успешный reorder. Harness теперь:
+- доказывает, что target permutation нетождественна текущему EN order;
+- ожидает exact no-op;
+- проверяет, что фактический EN order остался прежним;
+- логирует before/target/after IDs.
+
+Пока это **observed Payload characterization / possible product risk**, а не desired invariant. Если повторный committed-tree run подтвердит поведение, нужен отдельный schema/workflow design review: почему structurally valid reorder игнорируется в этом version state.
 
 ## OPEN schema/product issue: ADR-002 vs required localized fields
 
@@ -125,6 +139,7 @@ shape и уже закрытого canonical serialization substrate.
 - invisible-section reorder: RU draft structure больше не считается изменённой до publication; exact expected set ограничен EN draft structure + EN visible structure.
 - EN draft delete: RU draft structure/visible остаются неизменными до publication; exact expected set включает только EN draft structure, EN visible structure и удалённый EN section component.
 - EN-only pre-publication: RU draft не должен считаться содержащим новую shared row до EN publication; post-publication representation характеризуется отдельно.
+- non-identity reorder: RU visible expected order теперь остаётся baseline order, потому что EN draft permutation не применяется к неизменённому RU draft.
 
 Ни один exact-diff check не заменён subset/contains-проверкой ради PASS.
 
