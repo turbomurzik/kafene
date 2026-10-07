@@ -112,6 +112,22 @@ shape и уже закрытого canonical serialization substrate.
 
 Отдельное schema-design решение должно определить conditional requiredness / validation по факту publication конкретной locale.
 
+## Expectation changes from committed clean-run observation
+
+Изменения ниже основаны только на фактическом clean-run output от commit `20a408b1cd857c183a2237ff028fc64e28f78c4c`; exact-diff discipline сохранена.
+
+- `observed: EN shared draft write changes only EN draft projection`: удалено ожидание `draft:ru`; clean run показал изменение только EN draft.
+- `observed: RU shared draft write changes only RU draft projection`: добавлен зеркальный characterization test.
+- `observed: publish EN advances shared published state and synchronizes RU shared draft`: добавлен `draft:ru` в exact expected set; он присутствовал в фактическом diff.
+- `observed: pending RU shared change is advanced by EN publish`: добавлен `draft:en` в exact expected set; он присутствовал в фактическом diff.
+- `observed: pending EN shared change is advanced by RU publish`: добавлен `draft:ru` в exact expected set; он присутствовал в фактическом diff.
+- EN draft reorder: удалены RU draft structure/visible expectations; clean run показал только EN draft structure + EN visible structure.
+- invisible-section reorder: RU draft structure больше не считается изменённой до publication; exact expected set ограничен EN draft structure + EN visible structure.
+- EN draft delete: RU draft structure/visible остаются неизменными до publication; exact expected set включает только EN draft structure, EN visible structure и удалённый EN section component.
+- EN-only pre-publication: RU draft не должен считаться содержащим новую shared row до EN publication; post-publication representation характеризуется отдельно.
+
+Ни один exact-diff check не заменён subset/contains-проверкой ради PASS.
+
 ## Editorial workflow requirement
 
 Payload publication одной локали может протолкнуть pending shared changes,
