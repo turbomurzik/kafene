@@ -1,34 +1,110 @@
 # Canonical serialization schema-pass
 
-Статус: **EXECUTABLE TEST — результат не считать evidence до фактического запуска**
+Статус: **EXECUTABLE TEST — результат не считать CLOSED до фактического запуска**
 
-Цель — проверить versioned serialization contract, на котором будут строиться
-verification component hashes и generation input hashes.
+Цель — проверить deterministic serialization substrate и hash envelope для
+verification/generation manifests.
 
-Тестируемый contract:
+## Versioned contracts
 
-- `hash_spec_version = kafene-canonical-json-v1`;
-- object keys сортируются детерминированно;
-- strings нормализуются в Unicode NFC;
-- `null` является явным значением;
-- object field со значением `undefined` трактуется как отсутствующее поле;
-- `undefined` внутри array запрещён и приводит к fail-closed error;
-- array order сохраняется и считается semantic;
-- finite numbers сериализуются JSON-детерминированно; `-0` нормализуется в `0`;
-- NaN/Infinity запрещены;
-- rich-text сериализуется как структурированный JSON tree, а не rendered HTML/text;
-- object-key order внутри rich-text не влияет на hash;
-- semantic child order rich-text влияет на hash.
+- serialization substrate: `kafene-canonical-json-v1.1`;
+- hash envelope: `kafene-sha256-domain-v1`;
+- component field-selection spec: отдельная версия, этим тестом не определяется;
+- rich-text semantic projection: отдельная версия, этим тестом не определяется.
 
-Этот schema-pass не определяет, **какие поля** входят в конкретный
-VerificationRecord component. Он проверяет только deterministic serialization
-уже выбранного component value.
+## Contract v1.1
 
-Запуск из `spike/payload`:
+Разрешены только:
 
+- plain object;
+- array;
+- string;
+- boolean;
+- null;
+- finite safe number.
+
+Fail-closed отклоняются:
+
+- Date;
+- bigint;
+- Map / Set;
+- Buffer / typed non-plain objects;
+- objects with `toJSON`;
+- symbol keys;
+- sparse arrays;
+- undefined внутри array;
+- cycles;
+- unsafe integers;
+- NaN / Infinity;
+- ill-formed UTF-16;
+- depth/size above limits.
+
+Дополнительно:
+
+- object `undefined` field = absence;
+- strings и keys → NFC;
+- CRLF/CR → LF;
+- key collision после NFC → reject;
+- key order → UTF-16 code units, без locale/ICU dependency;
+- array order semantic;
+- UTF-8 bytes без BOM;
+- SHA-256 lowercase hex;
+- domain separation:
+  `kafene:<verification|generation>:<component_type>\0<canonical-bytes>`;
+- default max depth: 64;
+- default serialized size: 1 MiB.
+
+## Важная граница
+
+Serializer не нормализует domain-specific values.
+
+До serializer boundary component projection должна привести:
+
+- Date → civil date `YYYY-MM-DD` или canonical UTC instant;
+- decimal/money → canonical decimal string;
+- relation → canonical ID;
+- binary → content hash;
+- unordered relation/tag/locality sets → deterministic sorted array.
+
+Raw editor/Lexical JSON не считается semantic rich-text contract.
+Отдельная versioned rich-text projection должна убрать несемантические editor
+fields и нормализовать эквивалентные node shapes до serializer.
+
+## Golden vectors
+
+Pinned vectors:
+
+- `golden/canonical-serialization-v1.1.json`
+
+Они содержат:
+
+- input;
+- ожидаемые canonical UTF-8 JSON bytes;
+- domain/component type;
+- ожидаемый SHA-256.
+
+Основной TypeScript test сверяет их побайтно.
+
+Дополнительно независимая stdlib Python implementation:
+
+- `reference/check-canonical-serialization.py`
+
+повторно сверяет те же golden vectors.
+
+## Запуск
+
+Из `spike/payload`:
+
+    git pull
     npm run canonical-serialization
 
-БД и Docker для этого теста не нужны.
+Docker/Postgres не нужны.
 
-Результат становится EVIDENCE только после фактического запуска и фиксации
-PASS/FAIL output.
+Для evidence после запуска сохранить:
+
+- полный PASS/FAIL output;
+- Node version: `node --version`;
+- ICU version: `node -p "process.versions.icu"`;
+- Python version: `python3 --version`.
+
+ICU фиксируется для audit, хотя key ordering v1.1 от ICU/locale уже не зависит.
