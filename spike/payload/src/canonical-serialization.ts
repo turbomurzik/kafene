@@ -173,11 +173,28 @@ export function canonicalize(
   )
 }
 
+function serializeCanonicalValue(value: CanonicalValue): string {
+  if (value === null || typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
+    return JSON.stringify(value)
+  }
+
+  if (Array.isArray(value)) {
+    return '[' + value.map((item) => serializeCanonicalValue(item)).join(',') + ']'
+  }
+
+  const entries = Object.entries(value)
+    .sort(([a], [b]) => compareUtf16CodeUnits(a, b))
+    .map(([key, child]) => `${JSON.stringify(key)}:${serializeCanonicalValue(child)}`)
+
+  return '{' + entries.join(',') + '}'
+}
+
 export function canonicalSerialize(
   value: unknown,
   options: SerializeOptions = {},
 ): string {
-  const serialized = JSON.stringify(canonicalize(value, options))
+  const canonical = canonicalize(value, options)
+  const serialized = serializeCanonicalValue(canonical)
   const byteLength = Buffer.byteLength(serialized, 'utf8')
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES
 
