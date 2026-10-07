@@ -107,7 +107,9 @@ check('cycles fail closed', () => {
   assert.throws(() => canonicalSerialize(value), /cycle detected/)
 })
 
-check('unsafe integers and non-finite numbers fail closed; -0 becomes 0', () => {
+check('non-integer, unsafe and non-finite numbers fail closed; -0 becomes 0', () => {
+  assert.throws(() => canonicalSerialize({ value: 1.5 }), /only integers/)
+  assert.throws(() => canonicalSerialize({ value: 1e-7 }), /only integers/)
   assert.throws(
     () => canonicalSerialize({ value: Number.MAX_SAFE_INTEGER + 1 }),
     /unsafe integers/,
@@ -115,6 +117,20 @@ check('unsafe integers and non-finite numbers fail closed; -0 becomes 0', () => 
   assert.throws(() => canonicalSerialize({ value: Number.NaN }), /NaN or Infinity/)
   assert.throws(() => canonicalSerialize({ value: Number.POSITIVE_INFINITY }), /NaN or Infinity/)
   assert.equal(canonicalSerialize({ value: -0 }), canonicalSerialize({ value: 0 }))
+})
+
+check('prototype-like keys and null-prototype objects serialize as ordinary data', () => {
+  const value = Object.create(null) as Record<string, unknown>
+  value.__proto__ = 'p'
+  value.constructor = 'c'
+  value.toString = 't'
+  value.hasOwnProperty = 'h'
+  value.normal = 'n'
+
+  assert.equal(
+    canonicalSerialize(value),
+    '{"__proto__":"p","constructor":"c","hasOwnProperty":"h","normal":"n","toString":"t"}',
+  )
 })
 
 check('unpaired UTF-16 surrogates fail closed', () => {
@@ -145,6 +161,18 @@ check('component type participates in hash envelope', () => {
   assert.notEqual(
     canonicalHash('verification', 'guide-section', value),
     canonicalHash('verification', 'guide-summary', value),
+  )
+})
+
+check('hash envelope framing rejects ambiguous component separators', () => {
+  const value = { text: 'same bytes' }
+  assert.throws(
+    () => canonicalHash('verification', 'guide:section', value),
+    /componentType must match/,
+  )
+  assert.throws(
+    () => canonicalHash('verification', 'guide\u0000section', value),
+    /componentType must match/,
   )
 })
 
