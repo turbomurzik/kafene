@@ -35,6 +35,7 @@ type Fixture = {
 
 type Snapshot = Map<string, ComponentState>
 
+const PAYLOAD_VERSION = '3.90.2'
 const payload = await getPayload({ config })
 const results: Array<{ criterion: string; ok: boolean; detail?: string }> = []
 let fixtureCounter = 0
@@ -430,8 +431,8 @@ await check('RU fallback=false remains independent when EN localized content cha
   assert.equal(after.summary, before.summary)
 })
 
-await check('shared draft change appears in both draft locale projections but not published before publish', async () => {
-  const f = await createFreshGuide('shared-draft')
+await check('observed: EN shared draft write changes only EN draft projection', async () => {
+  const f = await createFreshGuide('shared-draft-en')
   const i = ids(f.id, f.sectionIds)
   const before = await snapshotAll(f.id)
   await payload.update({
@@ -446,11 +447,29 @@ await check('shared draft change appears in both draft locale projections but no
   const after = await snapshotAll(f.id)
   assertExactChanged(snapshotDiff(before, after), [
     viewKey('draft', 'en', i.applicability),
+  ])
+})
+
+await check('observed: RU shared draft write changes only RU draft projection', async () => {
+  const f = await createFreshGuide('shared-draft-ru')
+  const i = ids(f.id, f.sectionIds)
+  const before = await snapshotAll(f.id)
+  await payload.update({
+    collection: 'invalidation-guides',
+    id: f.id,
+    locale: 'ru',
+    fallbackLocale: false,
+    draft: true,
+    data: { applicability: 'ru-only-pending' },
+    overrideAccess: true,
+  } as any)
+  const after = await snapshotAll(f.id)
+  assertExactChanged(snapshotDiff(before, after), [
     viewKey('draft', 'ru', i.applicability),
   ])
 })
 
-await check('publish EN advances shared state for both published locale views, not RU-localized components', async () => {
+await check('observed: publish EN advances shared published state and synchronizes RU shared draft', async () => {
   const f = await createFreshGuide('publish-en-shared')
   const i = ids(f.id, f.sectionIds)
 
@@ -469,6 +488,7 @@ await check('publish EN advances shared state for both published locale views, n
   const after = await snapshotAll(f.id)
 
   assertExactChanged(snapshotDiff(before, after), [
+    viewKey('draft', 'ru', i.applicability),
     viewKey('published', 'en', i.applicability),
     viewKey('published', 'ru', i.applicability),
   ])
@@ -479,7 +499,7 @@ await check('publish EN advances shared state for both published locale views, n
   assert.equal(ruPublished.applicability, 'eu-residents')
 })
 
-await check('pending shared change written through RU is advanced by EN publish (observed Payload semantics)', async () => {
+await check('observed: pending RU shared change is advanced by EN publish', async () => {
   const f = await createFreshGuide('pending-ru-publish-en')
   const i = ids(f.id, f.sectionIds)
   await payload.update({
@@ -495,12 +515,13 @@ await check('pending shared change written through RU is advanced by EN publish 
   await publishLocale(f.id, 'en')
   const after = await snapshotAll(f.id)
   assertExactChanged(snapshotDiff(before, after), [
+    viewKey('draft', 'en', i.applicability),
     viewKey('published', 'en', i.applicability),
     viewKey('published', 'ru', i.applicability),
   ])
 })
 
-await check('pending shared change written through EN is advanced by RU publish (observed Payload semantics)', async () => {
+await check('observed: pending EN shared change is advanced by RU publish', async () => {
   const f = await createFreshGuide('pending-en-publish-ru')
   const i = ids(f.id, f.sectionIds)
   await payload.update({
@@ -516,9 +537,108 @@ await check('pending shared change written through EN is advanced by RU publish 
   await publishLocale(f.id, 'ru')
   const after = await snapshotAll(f.id)
   assertExactChanged(snapshotDiff(before, after), [
+    viewKey('draft', 'ru', i.applicability),
     viewKey('published', 'en', i.applicability),
     viewKey('published', 'ru', i.applicability),
   ])
+})
+
+await check('EN publication does not destroy unpublished RU localized draft', async () => {
+  const f = await createFreshGuide('ru-local-draft-survives-en-publish')
+  const i = ids(f.id, f.sectionIds)
+  const ru = await readGuide(f.id, 'ru', 'draft')
+  await payload.update({
+    collection: 'invalidation-guides',
+    id: f.id,
+    locale: 'ru',
+    fallbackLocale: false,
+    draft: true,
+    data: {
+      sections: (ru.sections as Row[]).map((row) => ({
+        id: row.id,
+        sectionKey: row.sectionKey,
+        heading: String(row.id) === f.sectionIds[0] ? 'Незаконченная RU правка' : row.heading,
+        body: row.body,
+      })),
+    },
+    overrideAccess: true,
+  } as any)
+
+  const before = await snapshotAll(f.id)
+  const beforeRuDraft = fixtureProjectionV0(await readGuide(f.id, 'ru', 'draft'), 'ru')
+  const beforeRuPublished = fixtureProjectionV0(await readGuide(f.id, 'ru', 'published'), 'ru')
+  const ruDraftHash = getState(beforeRuDraft, i.sectionARu)!.hash
+  const ruPublishedHash = getState(beforeRuPublished, i.sectionARu)!.hash
+
+  await publishLocale(f.id, 'en')
+
+  const after = await snapshotAll(f.id)
+  assertExactChanged(snapshotDiff(before, after), [])
+  const afterRuDraft = fixtureProjectionV0(await readGuide(f.id, 'ru', 'draft'), 'ru')
+  const afterRuPublished = fixtureProjectionV0(await readGuide(f.id, 'ru', 'published'), 'ru')
+  assert.equal(getState(afterRuDraft, i.sectionARu)?.hash, ruDraftHash)
+  assert.equal(getState(afterRuPublished, i.sectionARu)?.hash, ruPublishedHash)
+})
+
+async function sharedState(id: string) {
+  const read = async (locale: Locale, surface: Surface) => {
+    const doc = await readGuide(id, locale, surface)
+    const projection = fixtureProjectionV0(doc, locale)
+    const identity = { entity: 'guide', componentType: 'applicability', componentId: id, locale: null } as ComponentIdentity
+    return { value: doc.applicability, hash: getState(projection, identity)!.hash }
+  }
+  return {
+    draftEn: await read('en', 'draft'),
+    draftRu: await read('ru', 'draft'),
+    publishedEn: await read('en', 'published'),
+    publishedRu: await read('ru', 'published'),
+  }
+}
+
+async function runConflictingSharedDraftProbe(firstPublish: Locale) {
+  const f = await createFreshGuide(`conflict-${firstPublish}-first`)
+  await payload.update({
+    collection: 'invalidation-guides',
+    id: f.id,
+    locale: 'en',
+    fallbackLocale: false,
+    draft: true,
+    data: { applicability: 'shared-A-from-en' },
+    overrideAccess: true,
+  } as any)
+  await payload.update({
+    collection: 'invalidation-guides',
+    id: f.id,
+    locale: 'ru',
+    fallbackLocale: false,
+    draft: true,
+    data: { applicability: 'shared-B-from-ru' },
+    overrideAccess: true,
+  } as any)
+
+  const beforePublish = await sharedState(f.id)
+  console.log(`CHAR  conflict ${firstPublish}-first before publish:`, JSON.stringify(beforePublish))
+
+  await publishLocale(f.id, firstPublish)
+  const afterFirst = await sharedState(f.id)
+  console.log(`CHAR  conflict ${firstPublish}-first after first publish:`, JSON.stringify(afterFirst))
+
+  const secondPublish: Locale = firstPublish === 'en' ? 'ru' : 'en'
+  await publishLocale(f.id, secondPublish)
+  const afterSecond = await sharedState(f.id)
+  console.log(`CHAR  conflict ${firstPublish}-first after second publish:`, JSON.stringify(afterSecond))
+
+  // Characterization probe only until a committed-tree run establishes exact observed states.
+  assert.equal(afterFirst.publishedEn.value, afterFirst.publishedRu.value)
+  assert.equal(afterSecond.publishedEn.value, afterSecond.publishedRu.value)
+}
+
+await check('observed: conflicting shared drafts, EN publish first', async () => {
+  await runConflictingSharedDraftProbe('en')
+})
+
+await check('observed: conflicting shared drafts, RU publish first', async () => {
+  await runConflictingSharedDraftProbe('ru')
 })
 
 await check('re-publishing without changes changes nothing', async () => {
@@ -561,7 +681,6 @@ async function runReorderCase(label: string) {
   const after = await snapshotAll(f.id)
   const expected = [
     viewKey('draft', 'en', i.structure),
-    viewKey('draft', 'ru', i.structure),
   ]
 
   const expectedEnVisible = expectedVisibleAfterPermutation(visibleIdsV0(beforeEn), permutation)
@@ -570,9 +689,7 @@ async function runReorderCase(label: string) {
   if (JSON.stringify(expectedEnVisible) !== JSON.stringify(visibleIdsV0(beforeEn))) {
     expected.push(viewKey('draft', 'en', i.visibleEn))
   }
-  if (JSON.stringify(expectedRuVisible) !== JSON.stringify(visibleIdsV0(beforeRu))) {
-    expected.push(viewKey('draft', 'ru', i.visibleRu))
-  }
+  // EN draft reorder must not alter RU draft projections before publication.
 
   assertExactChanged(snapshotDiff(before, after), expected)
   assert.deepEqual(visibleIdsV0(await readGuide(f.id, 'en', 'draft')), expectedEnVisible)
@@ -627,8 +744,8 @@ await check('moving EN-visible/RU-invisible section can leave RU visible order u
       sections: (ru.sections as Row[]).map((row) => ({
         id: row.id,
         sectionKey: row.sectionKey,
-        heading: String(row.id) === f.sectionIds[1] ? null : row.heading,
-        body: String(row.id) === f.sectionIds[1] ? null : row.body,
+        heading: String(row.id) === f.sectionIds[1] ? '\u200B' : row.heading,
+        body: String(row.id) === f.sectionIds[1] ? '\u200B' : row.body,
       })),
     },
     overrideAccess: true,
@@ -952,6 +1069,8 @@ await check('structural scenarios are order-independent across fresh fixtures', 
 })
 
 console.log('\n--- Local invalidation schema-pass summary ---')
+console.log(`payload: ${PAYLOAD_VERSION}`)
+console.log(`node: ${process.version}`)
 console.log('projection: fixture-v0 (TEST ONLY; field-selection/partial-section/rich-text remain OPEN)')
 for (const result of results) {
   console.log(`${result.ok ? 'PASS' : 'FAIL'}  ${result.criterion}`)
