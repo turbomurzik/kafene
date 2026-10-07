@@ -27,9 +27,11 @@ def canonicalize(value):
     if isinstance(value, float):
         if not math.isfinite(value):
             raise TypeError("non-finite number")
-        if value.is_integer() and abs(value) > MAX_SAFE_INTEGER:
+        if not value.is_integer():
+            raise TypeError("only integers are allowed")
+        if abs(value) > MAX_SAFE_INTEGER:
             raise TypeError("unsafe integer")
-        return 0 if value == 0 else value
+        return int(value)
     if isinstance(value, list):
         return [canonicalize(item) for item in value]
     if isinstance(value, dict):
