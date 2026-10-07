@@ -1,0 +1,60 @@
+[
+  {
+    "name": "basic-order-and-nfc",
+    "domain": "verification",
+    "componentType": "guide-section",
+    "input": {
+      "z": 3,
+      "a": "Café",
+      "nested": {
+        "beta": 2,
+        "alpha": 1
+      }
+    },
+    "canonical": "{\"a\":\"Café\",\"nested\":{\"alpha\":1,\"beta\":2},\"z\":3}",
+    "sha256": "6689b205363952567f18c7fef67d9512828abe0cdb6170a9bc99480025185b10"
+  },
+  {
+    "name": "generation-domain",
+    "domain": "generation",
+    "componentType": "guide-summary",
+    "input": {
+      "text": "Line 1\r\nLine 2",
+      "value": 0
+    },
+    "canonical": "{\"text\":\"Line 1\\nLine 2\",\"value\":0}",
+    "sha256": "4de32f8b2a2e85037ae7bb260ba751be56a9ecf4a206b8408b1a88cf9e7c4070"
+  },
+  {
+    "name": "unicode-keys",
+    "domain": "verification",
+    "componentType": "keyfact",
+    "input": {
+      "a": 1,
+      "B": 2,
+      "_": 3,
+      "ä": 4,
+      "10": 5,
+      "2": 6,
+      "😀": 7,
+      "�": 8
+    },
+    "canonical": "{\"10\":5,\"2\":6,\"B\":2,\"_\":3,\"a\":1,\"ä\":4,\"😀\":7,\"�\":8}",
+    "sha256": "c578ceb111e8046d25c6332f66ed8b7ea247d92ee8c74568383a401f3c9d6ed8"
+  },
+  {
+    "name": "null-and-array-order",
+    "domain": "verification",
+    "componentType": "guide-title",
+    "input": {
+      "summary": null,
+      "items": [
+        "requirements",
+        "fees"
+      ],
+      "title": "Й Ё ά"
+    },
+    "canonical": "{\"items\":[\"requirements\",\"fees\"],\"summary\":null,\"title\":\"Й Ё ά\"}",
+    "sha256": "2e5cd8f287fc8ecfa37cdba99797f8b2ceca30a11ed95060aab99a380dbab1d7"
+  }
+]
