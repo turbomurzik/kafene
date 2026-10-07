@@ -776,11 +776,10 @@ await check('moving EN-visible/RU-invisible section can leave RU visible order u
   } as any)
 
   const after = await snapshotAll(f.id)
-  const diff = snapshotDiff(before, after)
-  assert.ok(diff.has(viewKey('draft', 'en', i.structure)))
-  assert.ok(diff.has(viewKey('draft', 'ru', i.structure)))
-  assert.ok(diff.has(viewKey('draft', 'en', i.visibleEn)))
-  assert.equal(diff.has(viewKey('draft', 'ru', i.visibleRu)), false)
+  assertExactChanged(snapshotDiff(before, after), [
+    viewKey('draft', 'en', i.structure),
+    viewKey('draft', 'en', i.visibleEn),
+  ])
   assert.deepEqual(visibleIdsV0(await readGuide(f.id, 'ru', 'draft')), beforeRuIds)
 })
 
@@ -818,8 +817,7 @@ await check('EN-only section: shared changes, RU visible stays stable; RU row re
 
   const ruDraftBeforePublish = await readGuide(f.id, 'ru', 'draft')
   const newRowDraft = (ruDraftBeforePublish.sections as Row[]).find((row) => String(row.sectionKey) === 'en-only')
-  assert.ok(newRowDraft)
-  assert.equal(sectionVisibleV0(newRowDraft!), false)
+  assert.equal(newRowDraft, undefined)
 
   await publishLocale(f.id, 'en')
 
@@ -891,9 +889,10 @@ await check('EN-only section: shared changes, RU visible stays stable; RU row re
   assert.equal(getState(afterEnRuPublish, i.visibleEn)?.hash, enVisibleBeforeRuPublish)
 })
 
-await check('delete/tombstone semantics invalidate structure where visible and never rebind old ID', async () => {
+await check('delete/tombstone semantics invalidate only EN draft before publication and never rebind old ID', async () => {
   const f = await createFreshGuide('delete')
   const i = ids(f.id, f.sectionIds)
+  const before = await snapshotAll(f.id)
   const beforeEn = fixtureProjectionV0(await readGuide(f.id, 'en', 'draft'), 'en')
   const beforeRu = fixtureProjectionV0(await readGuide(f.id, 'ru', 'draft'), 'ru')
   const oldSection = getState(beforeEn, i.sectionAEn)!
@@ -914,11 +913,16 @@ await check('delete/tombstone semantics invalidate structure where visible and n
     overrideAccess: true,
   } as any)
 
+  const after = await snapshotAll(f.id)
   const afterEn = fixtureProjectionV0(await readGuide(f.id, 'en', 'draft'), 'en')
   const afterRu = fixtureProjectionV0(await readGuide(f.id, 'ru', 'draft'), 'ru')
-  assert.notEqual(getState(beforeEn, i.structure)?.hash, getState(afterEn, i.structure)?.hash)
-  assert.notEqual(getState(beforeEn, i.visibleEn)?.hash, getState(afterEn, i.visibleEn)?.hash)
-  assert.notEqual(getState(beforeRu, i.visibleRu)?.hash, getState(afterRu, i.visibleRu)?.hash)
+  assertExactChanged(snapshotDiff(before, after), [
+    viewKey('draft', 'en', i.structure),
+    viewKey('draft', 'en', i.visibleEn),
+    viewKey('draft', 'en', i.sectionAEn),
+  ])
+  assert.equal(getState(beforeRu, i.structure)?.hash, getState(afterRu, i.structure)?.hash)
+  assert.equal(getState(beforeRu, i.visibleRu)?.hash, getState(afterRu, i.visibleRu)?.hash)
   assert.equal(artifactValid(oldArtifact, afterEn), false)
 
   const tombstoned = new Map(afterEn)
