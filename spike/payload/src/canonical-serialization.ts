@@ -62,7 +62,10 @@ function canonicalNumber(value: number): number {
   if (!Number.isFinite(value)) {
     throw new TypeError('canonical serialization does not allow NaN or Infinity')
   }
-  if (Number.isInteger(value) && !Number.isSafeInteger(value)) {
+  if (!Number.isInteger(value)) {
+    throw new TypeError('canonical serialization allows only integers; decimals must be projected to strings')
+  }
+  if (!Number.isSafeInteger(value)) {
     throw new TypeError('canonical serialization does not allow unsafe integers')
   }
   return Object.is(value, -0) ? 0 : value
