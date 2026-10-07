@@ -34,13 +34,20 @@ shape и уже закрытого canonical serialization substrate.
 4. Draft/published:
    - draft и published читаются отдельно;
    - published-facing artifact не инвалидируется draft-only change;
-   - EN publication не меняет RU published hashes;
+   - publication одной локали не меняет locale-specific hashes другой локали;
+   - shared `locale=null` state может продвигаться публикацией любой локали;
+   - draft-only shared change не затрагивает published state до publication;
+   - повторная publication второй локали не меняет shared hash повторно;
+   - unpublish локали не откатывает shared published state;
    - verified draft, опубликованный без изменения, сохраняет hash;
    - edit after verification меняет published hash после publish.
 
 5. Structure:
    - ordered live section IDs — отдельный shared structural component;
-   - reorder меняет structural hash, но не section hashes;
+   - fixture-v0 также содержит locale-visible structural projection;
+   - locale-visible structure включает только sections с контентом этой локали при fallback=false;
+   - это hypothesis для будущего field-selection spec, не production contract;
+   - reorder меняет shared structural hash, но не section hashes;
    - add/remove влияет на artifacts, объявившие structural dependency;
    - section-only artifact не инвалидируется из-за нового sibling.
 
@@ -53,6 +60,12 @@ shape и уже закрытого canonical serialization substrate.
 7. Identity:
    - component identity = entity + component_type + component_id + locale|null;
    - удалённый section ID не переиспользуется молча новым section.
+
+8. Shared-state editorial invariant:
+   - non-localized shared fields имеют один published state на Guide;
+   - publication одной локали может изменить shared state, видимый другим опубликованным локалям;
+   - workflow должен предупреждать редактора о затронутых опубликованных локалях до такой publication;
+   - конкретная UX/mechanics предупреждения этим schema-pass не выбирается.
 
 ## Не входит
 
