@@ -30,12 +30,12 @@
     "domain": "verification",
     "componentType": "keyfact",
     "input": {
+      "2": 6,
+      "10": 5,
       "a": 1,
       "B": 2,
       "_": 3,
       "ä": 4,
-      "10": 5,
-      "2": 6,
       "😀": 7,
       "�": 8
     },
@@ -56,5 +56,28 @@
     },
     "canonical": "{\"items\":[\"requirements\",\"fees\"],\"summary\":null,\"title\":\"Й Ё ά\"}",
     "sha256": "2e5cd8f287fc8ecfa37cdba99797f8b2ceca30a11ed95060aab99a380dbab1d7"
+  },
+  {
+    "name": "escaping-controls",
+    "domain": "verification",
+    "componentType": "guide-section",
+    "input": {
+      "text": "\u0000\u0001\b\t\n\f\r\u001f\"\\/  "
+    },
+    "canonical": "{\"text\":\"\\u0000\\u0001\\b\\t\\n\\f\\n\\u001f\\\"\\\\/  \"}",
+    "sha256": "665184bd5cc560a77678725a790323c93cd6835f6756449c9d6ec78a02051a14"
+  },
+  {
+    "name": "prototype-like-keys",
+    "domain": "verification",
+    "componentType": "guide-section",
+    "input": {
+      "constructor": "c",
+      "toString": "t",
+      "hasOwnProperty": "h",
+      "normal": "n"
+    },
+    "canonical": "{\"__proto__\":\"p\",\"constructor\":\"c\",\"hasOwnProperty\":\"h\",\"normal\":\"n\",\"toString\":\"t\"}",
+    "sha256": "31a32bad88d7cd0ba9a82c76da9bac7a7e9e78316d8ebf689fa07ac16dbb368d"
   }
 ]
