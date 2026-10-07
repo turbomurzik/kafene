@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import {
-  HASH_SPEC_VERSION,
+  DEFAULT_MAX_BYTES,
+  DEFAULT_MAX_DEPTH,
+  HASH_ENVELOPE_VERSION,
+  SERIALIZATION_SPEC_VERSION,
   canonicalHash,
   canonicalSerialize,
   canonicalize,
@@ -21,180 +27,185 @@ function check(name: string, fn: () => void) {
   }
 }
 
-check('object key ordering is deterministic', () => {
-  const a = {
-    z: 3,
-    a: 1,
-    nested: {
-      beta: 2,
-      alpha: 1,
-    },
-  }
-
-  const b = {
-    nested: {
-      alpha: 1,
-      beta: 2,
-    },
-    a: 1,
-    z: 3,
-  }
-
-  assert.equal(canonicalSerialize(a), canonicalSerialize(b))
-  assert.equal(canonicalHash(a), canonicalHash(b))
+check('UTF-16 code-unit key ordering is deterministic and locale-independent', () => {
+  const input = { a: 1, B: 2, _: 3, ä: 4, '10': 5, '2': 6, '😀': 7, '�': 8 }
+  assert.equal(
+    canonicalSerialize(input),
+    '{"10":5,"2":6,"B":2,"_":3,"a":1,"ä":4,"😀":7,"�":8}',
+  )
 })
 
-check('Unicode canonically equivalent strings normalize to NFC', () => {
-  const composed = 'Café'
-  const decomposed = 'Cafe\u0301'
-
-  assert.notEqual(composed.length, decomposed.length)
-  assert.equal(canonicalSerialize({ value: composed }), canonicalSerialize({ value: decomposed }))
-  assert.equal(canonicalHash({ value: composed }), canonicalHash({ value: decomposed }))
+check('Unicode equivalent values and keys normalize to NFC', () => {
+  assert.equal(
+    canonicalSerialize({ value: 'Cafe\u0301', key: 'и\u0306 е\u0308 ά' }),
+    canonicalSerialize({ value: 'Café', key: 'й ё ά' }),
+  )
+  assert.equal(canonicalSerialize({ 'Cafe\u0301': 1 }), canonicalSerialize({ Café: 1 }))
 })
 
-check('null remains explicit and differs from absent/undefined field', () => {
+check('NFC key collision fails closed', () => {
+  assert.throws(
+    () => canonicalSerialize({ Café: 1, 'Cafe\u0301': 2 }),
+    /key collision after normalization/,
+  )
+})
+
+check('CRLF and CR normalize to LF', () => {
+  assert.equal(
+    canonicalSerialize({ value: 'one\r\ntwo\rthree' }),
+    canonicalSerialize({ value: 'one\ntwo\nthree' }),
+  )
+})
+
+check('null is explicit while undefined object field means absence', () => {
   const explicitNull = { title: 'Guide', summary: null }
   const absent = { title: 'Guide' }
   const undefinedField = { title: 'Guide', summary: undefined }
 
   assert.notEqual(canonicalSerialize(explicitNull), canonicalSerialize(absent))
-  assert.notEqual(canonicalHash(explicitNull), canonicalHash(absent))
-
-  // JS undefined means field absence for this contract.
   assert.equal(canonicalSerialize(undefinedField), canonicalSerialize(absent))
-  assert.equal(canonicalHash(undefinedField), canonicalHash(absent))
 })
 
 check('array order is semantic and preserved', () => {
-  const first = ['requirements', 'fees']
-  const second = ['fees', 'requirements']
-
-  assert.notEqual(canonicalSerialize(first), canonicalSerialize(second))
-  assert.notEqual(canonicalHash(first), canonicalHash(second))
-})
-
-check('undefined array items fail closed', () => {
-  assert.throws(
-    () => canonicalSerialize(['one', undefined, 'three']),
-    /undefined array items are not allowed/,
+  assert.notEqual(
+    canonicalSerialize(['requirements', 'fees']),
+    canonicalSerialize(['fees', 'requirements']),
   )
 })
 
-check('finite numbers are stable and -0 normalizes to 0', () => {
-  assert.equal(canonicalSerialize({ value: -0 }), canonicalSerialize({ value: 0 }))
-  assert.equal(canonicalHash({ value: -0 }), canonicalHash({ value: 0 }))
+check('unsupported object/value types fail closed', () => {
+  assert.throws(() => canonicalSerialize(new Date()), /only plain objects/)
+  assert.throws(() => canonicalSerialize(new Map()), /only plain objects/)
+  assert.throws(() => canonicalSerialize(new Set()), /only plain objects/)
+  assert.throws(() => canonicalSerialize(Buffer.from('x')), /only plain objects/)
+  assert.throws(() => canonicalSerialize(1n), /unsupported canonical serialization type/)
+})
+
+check('objects with toJSON fail closed', () => {
+  assert.throws(
+    () => canonicalSerialize({ value: 1, toJSON() { return { value: 1 } } }),
+    /toJSON/,
+  )
+})
+
+check('symbol keys fail closed', () => {
+  const value: Record<PropertyKey, unknown> = { visible: 1 }
+  value[Symbol('hidden')] = 2
+  assert.throws(() => canonicalSerialize(value), /symbol keys/)
+})
+
+check('sparse and undefined array items fail closed', () => {
+  const sparse = new Array(2)
+  sparse[1] = 'value'
+  assert.throws(() => canonicalSerialize(sparse), /sparse arrays/)
+  assert.throws(() => canonicalSerialize(['one', undefined]), /undefined array items/)
+})
+
+check('cycles fail closed', () => {
+  const value: Record<string, unknown> = {}
+  value.self = value
+  assert.throws(() => canonicalSerialize(value), /cycle detected/)
+})
+
+check('unsafe integers and non-finite numbers fail closed; -0 becomes 0', () => {
+  assert.throws(
+    () => canonicalSerialize({ value: Number.MAX_SAFE_INTEGER + 1 }),
+    /unsafe integers/,
+  )
   assert.throws(() => canonicalSerialize({ value: Number.NaN }), /NaN or Infinity/)
   assert.throws(() => canonicalSerialize({ value: Number.POSITIVE_INFINITY }), /NaN or Infinity/)
+  assert.equal(canonicalSerialize({ value: -0 }), canonicalSerialize({ value: 0 }))
 })
 
-check('rich-text object key order and Unicode differences do not change hash', () => {
-  // Representative Payload/Lexical-style JSON tree. The serializer intentionally
-  // treats rich text as structured data, not as HTML or rendered plaintext.
-  const richA = {
-    root: {
-      type: 'root',
-      version: 1,
-      direction: 'ltr',
-      format: '',
-      indent: 0,
-      children: [
-        {
-          type: 'paragraph',
-          version: 1,
-          direction: 'ltr',
-          format: '',
-          indent: 0,
-          children: [
-            {
-              type: 'text',
-              version: 1,
-              detail: 0,
-              format: 0,
-              mode: 'normal',
-              style: '',
-              text: 'Café requirements',
-            },
-          ],
-        },
-      ],
-    },
-  }
-
-  const richB = {
-    root: {
-      children: [
-        {
-          children: [
-            {
-              text: 'Cafe\u0301 requirements',
-              style: '',
-              mode: 'normal',
-              format: 0,
-              detail: 0,
-              version: 1,
-              type: 'text',
-            },
-          ],
-          indent: 0,
-          format: '',
-          direction: 'ltr',
-          version: 1,
-          type: 'paragraph',
-        },
-      ],
-      indent: 0,
-      format: '',
-      direction: 'ltr',
-      version: 1,
-      type: 'root',
-    },
-  }
-
-  assert.equal(canonicalSerialize(richA), canonicalSerialize(richB))
-  assert.equal(canonicalHash(richA), canonicalHash(richB))
+check('unpaired UTF-16 surrogates fail closed', () => {
+  assert.throws(() => canonicalSerialize({ value: '\ud800' }), /unpaired high surrogate/)
+  assert.throws(() => canonicalSerialize({ value: '\udc00' }), /unpaired low surrogate/)
 })
 
-check('rich-text semantic child order changes hash', () => {
-  const a = {
-    root: {
-      children: [
-        { type: 'text', text: 'First' },
-        { type: 'text', text: 'Second' },
-      ],
-    },
-  }
-
-  const b = {
-    root: {
-      children: [
-        { type: 'text', text: 'Second' },
-        { type: 'text', text: 'First' },
-      ],
-    },
-  }
-
-  assert.notEqual(canonicalHash(a), canonicalHash(b))
+check('depth and byte limits fail closed', () => {
+  const tooDeep = { a: { b: { c: true } } }
+  assert.throws(() => canonicalSerialize(tooDeep, { maxDepth: 1 }), /max depth/)
+  assert.throws(
+    () => canonicalSerialize({ value: '1234567890' }, { maxBytes: 5 }),
+    /max bytes/,
+  )
 })
 
-check('serialization is idempotent', () => {
-  const input = {
-    z: 'Cafe\u0301',
-    a: {
-      n: null,
-      list: [{ b: 2, a: 1 }, 'text'],
+check('domain separation distinguishes verification and generation hashes', () => {
+  const value = { text: 'same bytes' }
+  const verification = canonicalHash('verification', 'guide-section', value)
+  const generation = canonicalHash('generation', 'guide-section', value)
+  assert.notEqual(verification, generation)
+  assert.match(verification, /^[0-9a-f]{64}$/)
+  assert.match(generation, /^[0-9a-f]{64}$/)
+})
+
+check('component type participates in hash envelope', () => {
+  const value = { text: 'same bytes' }
+  assert.notEqual(
+    canonicalHash('verification', 'guide-section', value),
+    canonicalHash('verification', 'guide-summary', value),
+  )
+})
+
+check('rich-text raw JSON is substrate-only, not semantic projection', () => {
+  const oneNode = { root: { children: [{ type: 'text', text: 'Hello world', format: 0 }] } }
+  const twoNodes = {
+    root: {
+      children: [
+        { type: 'text', text: 'Hello ', format: 0 },
+        { type: 'text', text: 'world', format: 0 },
+      ],
     },
   }
 
+  assert.notEqual(
+    canonicalHash('verification', 'guide-section', oneNode),
+    canonicalHash('verification', 'guide-section', twoNodes),
+  )
+})
+
+check('canonicalization is idempotent', () => {
+  const input = { z: 'Cafe\u0301\r\nline', a: { n: null, list: [{ b: 2, a: 1 }, 'text'] } }
   const once = canonicalize(input)
   const twice = canonicalize(once)
-
   assert.deepEqual(twice, once)
   assert.equal(canonicalSerialize(twice), canonicalSerialize(once))
 })
 
-console.log('\n--- Canonical serialization schema-pass summary ---')
-console.log(`hash_spec_version: ${HASH_SPEC_VERSION}`)
+check('golden vectors match pinned canonical bytes and hashes', () => {
+  const vectorsURL = new URL('../golden/canonical-serialization-v1.1.json', import.meta.url)
+  const vectors = JSON.parse(readFileSync(vectorsURL, 'utf8')) as Array<{
+    name: string
+    domain: 'verification' | 'generation'
+    componentType: string
+    input: unknown
+    canonical: string
+    sha256: string
+  }>
+
+  for (const vector of vectors) {
+    assert.equal(canonicalSerialize(vector.input), vector.canonical, `${vector.name}: canonical`)
+    assert.equal(
+      canonicalHash(vector.domain, vector.componentType, vector.input),
+      vector.sha256,
+      `${vector.name}: sha256`,
+    )
+  }
+})
+
+check('independent Python implementation agrees with golden vectors', () => {
+  const script = fileURLToPath(new URL('../reference/check-canonical-serialization.py', import.meta.url))
+  const vectors = fileURLToPath(new URL('../golden/canonical-serialization-v1.1.json', import.meta.url))
+  const output = execFileSync('python3', [script, vectors], { encoding: 'utf8' })
+  assert.match(output, /PYTHON CROSS-CHECK PASS/)
+})
+
+console.log('\n--- Canonical serialization v1.1 schema-pass summary ---')
+console.log(`serialization_spec_version: ${SERIALIZATION_SPEC_VERSION}`)
+console.log(`hash_envelope_version: ${HASH_ENVELOPE_VERSION}`)
+console.log(`default_max_depth: ${DEFAULT_MAX_DEPTH}`)
+console.log(`default_max_bytes: ${DEFAULT_MAX_BYTES}`)
 for (const result of results) {
   console.log(`${result.ok ? 'PASS' : 'FAIL'}  ${result.name}`)
 }
