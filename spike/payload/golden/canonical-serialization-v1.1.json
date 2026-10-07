@@ -72,6 +72,7 @@
     "domain": "verification",
     "componentType": "guide-section",
     "input": {
+      "__proto__": "p",
       "constructor": "c",
       "toString": "t",
       "hasOwnProperty": "h",
