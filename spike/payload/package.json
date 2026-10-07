@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "spike": "NODE_ENV=development tsx src/run-spike.ts",
-    "guide-sections": "NODE_ENV=development tsx src/run-guide-section-schema-pass.ts"
+    "guide-sections": "NODE_ENV=development tsx src/run-guide-section-schema-pass.ts",
+    "canonical-serialization": "NODE_ENV=development tsx src/run-canonical-serialization-schema-pass.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
