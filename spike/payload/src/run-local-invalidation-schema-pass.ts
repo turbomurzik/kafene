@@ -9,7 +9,7 @@ type Row = Record<string, any>
 
 type ComponentIdentity = {
   entity: 'guide' | 'guide-section'
-  componentType: 'title' | 'summary' | 'applicability' | 'structure' | 'section'
+  componentType: 'title' | 'summary' | 'applicability' | 'structure' | 'visible-structure' | 'section'
   componentId: string
   locale: Locale | null
 }
@@ -99,6 +99,18 @@ function fixtureProjectionV0(doc: Row, locale: Locale): Map<string, ComponentSta
     { liveSectionIds: rows.map((row) => String(row.id)) },
   )
 
+  // TEST FIXTURE v0 HYPOTHESIS ONLY:
+  // locale-visible structure includes only rows with localized content in this locale.
+  // This is not yet the production field-selection contract.
+  add(
+    { entity: 'guide', componentType: 'visible-structure', componentId: guideId, locale },
+    {
+      visibleSectionIds: rows
+        .filter((row) => row.heading != null && row.heading !== '' && row.body != null && row.body !== '')
+        .map((row) => String(row.id)),
+    },
+  )
+
   for (const row of rows) {
     add(
       {
@@ -183,6 +195,19 @@ async function publishLocale(id: string, locale: Locale) {
   } as any)
 }
 
+async function unpublishLocale(id: string, locale: Locale) {
+  return payload.update({
+    collection: 'invalidation-guides',
+    id,
+    locale,
+    fallbackLocale: false,
+    publishSpecificLocale: locale,
+    draft: false,
+    data: { _status: 'draft' },
+    overrideAccess: true,
+  } as any)
+}
+
 const suffix = Date.now().toString(36)
 
 let guide = await payload.create({
@@ -260,12 +285,26 @@ const structureId: ComponentIdentity = {
   componentId: guideId,
   locale: null,
 }
+const enVisibleStructureId: ComponentIdentity = {
+  entity: 'guide',
+  componentType: 'visible-structure',
+  componentId: guideId,
+  locale: 'en',
+}
+const ruVisibleStructureId: ComponentIdentity = {
+  entity: 'guide',
+  componentType: 'visible-structure',
+  componentId: guideId,
+  locale: 'ru',
+}
 
 await check('fixture-v0 produces locale-specific and shared component identities', () => {
   assert.ok(getState(baselineEnPublished, enTitleId))
   assert.ok(getState(baselineRuPublished, ruTitleId))
   assert.ok(getState(baselineEnPublished, sharedApplicabilityId))
   assert.ok(getState(baselineEnPublished, structureId))
+  assert.ok(getState(baselineEnPublished, enVisibleStructureId))
+  assert.ok(getState(baselineRuPublished, ruVisibleStructureId))
 })
 
 await check('unchanged Payload save does not change component hashes', async () => {
@@ -435,11 +474,86 @@ await check('draft changes do not invalidate published-facing artifact before pu
   assert.equal(artifactValid(artifact, publishedAfter), true)
 })
 
-await check('publishing EN draft does not change RU published component hashes', async () => {
+await check('draft-only shared change does not affect published EN/RU until a locale is published', async () => {
+  const beforeEn = fixtureProjectionV0(await readGuide(guideId, 'en', 'published'), 'en')
   const beforeRu = fixtureProjectionV0(await readGuide(guideId, 'ru', 'published'), 'ru')
+  const beforeHash = getState(beforeEn, sharedApplicabilityId)!.hash
+  assert.equal(beforeHash, getState(beforeRu, sharedApplicabilityId)!.hash)
+
+  const draftEn = await readGuide(guideId, 'en', 'draft')
+  if (draftEn.applicability !== 'eu-residents') {
+    await payload.update({
+      collection: 'invalidation-guides',
+      id: guideId,
+      locale: 'en',
+      fallbackLocale: false,
+      draft: true,
+      data: { applicability: 'eu-residents' },
+      overrideAccess: true,
+    } as any)
+  }
+
+  const afterDraftEn = fixtureProjectionV0(await readGuide(guideId, 'en', 'published'), 'en')
+  const afterDraftRu = fixtureProjectionV0(await readGuide(guideId, 'ru', 'published'), 'ru')
+  assert.equal(getState(afterDraftEn, sharedApplicabilityId)?.hash, beforeHash)
+  assert.equal(getState(afterDraftRu, sharedApplicabilityId)?.hash, beforeHash)
+})
+
+await check('publishing EN advances one shared published state for both locales but not RU-localized components', async () => {
+  const beforeRu = fixtureProjectionV0(await readGuide(guideId, 'ru', 'published'), 'ru')
+  const beforeRuLocal = new Map(
+    [...beforeRu].filter(([, state]) => state.identity.locale === 'ru'),
+  )
+  const beforeSharedHash = getState(beforeRu, sharedApplicabilityId)!.hash
+
   await publishLocale(guideId, 'en')
+
+  const enDoc = await readGuide(guideId, 'en', 'published')
+  const ruDoc = await readGuide(guideId, 'ru', 'published')
+  assert.equal(enDoc.applicability, ruDoc.applicability)
+
+  const afterRu = fixtureProjectionV0(ruDoc, 'ru')
+  const afterRuLocal = new Map(
+    [...afterRu].filter(([, state]) => state.identity.locale === 'ru'),
+  )
+
+  assert.deepEqual([...changedKeys(beforeRuLocal, afterRuLocal)], [])
+  assert.notEqual(getState(afterRu, sharedApplicabilityId)?.hash, beforeSharedHash)
+})
+
+await check('RU artifact depending on shared component invalidates; RU-only artifact remains valid', async () => {
+  const sharedBefore = getState(baselineRuPublished, sharedApplicabilityId)!
+  const ruOnlyBefore = getState(baselineRuPublished, ruTitleId)!
+  const sharedArtifact = manifest('ru-shared', 'ru', 'published', [sharedBefore, ruOnlyBefore])
+  const ruOnlyArtifact = manifest('ru-only', 'ru', 'published', [ruOnlyBefore])
+
+  const currentRu = fixtureProjectionV0(await readGuide(guideId, 'ru', 'published'), 'ru')
+  assert.equal(artifactValid(sharedArtifact, currentRu), false)
+  assert.equal(artifactValid(ruOnlyArtifact, currentRu), true)
+})
+
+await check('publishing second locale does not advance shared hash again', async () => {
+  const before = fixtureProjectionV0(await readGuide(guideId, 'en', 'published'), 'en')
+  const beforeHash = getState(before, sharedApplicabilityId)!.hash
+
+  await publishLocale(guideId, 'ru')
+
+  const afterEn = fixtureProjectionV0(await readGuide(guideId, 'en', 'published'), 'en')
   const afterRu = fixtureProjectionV0(await readGuide(guideId, 'ru', 'published'), 'ru')
-  assert.deepEqual([...changedKeys(beforeRu, afterRu)], [])
+  assert.equal(getState(afterEn, sharedApplicabilityId)?.hash, beforeHash)
+  assert.equal(getState(afterRu, sharedApplicabilityId)?.hash, beforeHash)
+})
+
+await check('unpublishing RU does not roll back shared published state', async () => {
+  const beforeEn = fixtureProjectionV0(await readGuide(guideId, 'en', 'published'), 'en')
+  const beforeHash = getState(beforeEn, sharedApplicabilityId)!.hash
+
+  await unpublishLocale(guideId, 'ru')
+
+  const afterEn = fixtureProjectionV0(await readGuide(guideId, 'en', 'published'), 'en')
+  assert.equal(getState(afterEn, sharedApplicabilityId)?.hash, beforeHash)
+
+  await publishLocale(guideId, 'ru')
 })
 
 await check('verified draft published unchanged remains verified; edit-after-verification does not', async () => {
@@ -533,6 +647,45 @@ await check('add section invalidates all-sections artifact via structure but not
   const after = fixtureProjectionV0(await readGuide(guideId, 'en', 'draft'), 'en')
   assert.equal(artifactValid(allSectionsArtifact, after), false)
   assert.equal(artifactValid(sectionBArtifact, after), true)
+})
+
+await check('EN-only published section changes shared structure but not RU visible structure fixture', async () => {
+  const beforeRu = fixtureProjectionV0(await readGuide(guideId, 'ru', 'published'), 'ru')
+  const beforeSharedStructure = getState(beforeRu, structureId)!.hash
+  const beforeRuVisible = getState(beforeRu, ruVisibleStructureId)!.hash
+
+  const enDraft = await readGuide(guideId, 'en', 'draft')
+  await payload.update({
+    collection: 'invalidation-guides',
+    id: guideId,
+    locale: 'en',
+    fallbackLocale: false,
+    draft: true,
+    data: {
+      sections: [
+        ...(enDraft.sections as Row[]).map((row) => ({
+          id: row.id,
+          sectionKey: row.sectionKey,
+          heading: row.heading,
+          body: row.body,
+        })),
+        { sectionKey: 'en-only', heading: 'English only', body: 'Visible only in EN for now.' },
+      ],
+    },
+    overrideAccess: true,
+  } as any)
+
+  await publishLocale(guideId, 'en')
+
+  const afterEn = fixtureProjectionV0(await readGuide(guideId, 'en', 'published'), 'en')
+  const afterRu = fixtureProjectionV0(await readGuide(guideId, 'ru', 'published'), 'ru')
+
+  assert.notEqual(getState(afterRu, structureId)?.hash, beforeSharedStructure)
+  assert.equal(getState(afterRu, ruVisibleStructureId)?.hash, beforeRuVisible)
+  assert.notEqual(
+    getState(afterEn, enVisibleStructureId)?.hash,
+    getState(beforeRu, ruVisibleStructureId)?.hash,
+  )
 })
 
 await check('missing/tombstoned component fails closed and removed ID is not silently rebound', () => {
