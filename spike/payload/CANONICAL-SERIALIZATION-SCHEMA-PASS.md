@@ -21,7 +21,7 @@ verification/generation manifests.
 - string;
 - boolean;
 - null;
-- finite safe number.
+- safe integer.
 
 Fail-closed отклоняются:
 
@@ -34,6 +34,7 @@ Fail-closed отклоняются:
 - sparse arrays;
 - undefined внутри array;
 - cycles;
+- non-integer numbers;
 - unsafe integers;
 - NaN / Infinity;
 - ill-formed UTF-16;
@@ -61,7 +62,7 @@ Serializer не нормализует domain-specific values.
 До serializer boundary component projection должна привести:
 
 - Date → civil date `YYYY-MM-DD` или canonical UTC instant;
-- decimal/money → canonical decimal string;
+- decimal/money/percentage → canonical decimal string;
 - relation → canonical ID;
 - binary → content hash;
 - unordered relation/tag/locality sets → deterministic sorted array.
