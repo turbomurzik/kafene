@@ -1,6 +1,6 @@
 # Local Invalidation schema-pass
 
-Статус: **EXECUTABLE TEST — результат не считать EVIDENCE до фактического запуска**
+Статус: **EXECUTABLE TEST — OWNER REVIEW REQUIRED; агент не присваивает EVIDENCE/CLOSED**
 
 Цель — проверить локальность invalidation поверх реальной Payload Guide array
 shape и уже закрытого canonical serialization substrate.
@@ -17,6 +17,12 @@ shape и уже закрытого canonical serialization substrate.
 - rich-text semantic projection;
 - SourceDependency manifest coverage.
 
+## Environment / upgrade sentinel
+
+- Payload: **3.90.2** (точная версия из `spike/payload/package.json`);
+- PostgreSQL image: **postgres:16-alpine**;
+- characterization tests с префиксом `observed:` служат upgrade sentinel: изменение их поведения при обновлении Payload требует отдельного review.
+
 ## Проверяемые invariants
 
 1. **Locale isolation**
@@ -31,20 +37,18 @@ shape и уже закрытого canonical serialization substrate.
    - множество реально изменившихся components должно в точности совпасть с ожидаемым;
    - characterization pending-shared tests намеренно не требуют clean baseline после внесения pending change.
 
-3. **Shared publication semantics**
-   - non-localized shared field имеет один published state на Guide;
-   - draft-only shared change виден обеим draft locale projections, но не published;
-   - publication EN может продвинуть pending shared change, внесённый через RU, и наоборот;
-   - это **наблюдаемая Payload semantics, не желаемое workflow behavior**;
-   - повторная publication без изменений ничего не меняет.
+3. **Locale draft isolation / publication safety**
+   - localized RU draft change не должен уничтожаться, переписываться или публиковаться при publication EN;
+   - EN publication при clean shared baseline не должна менять RU localized draft/published component hashes;
+   - повторная publication без semantic changes ничего не меняет.
 
-4. **Reorder**
+4. **Reorder locality**
    - reorder — нетождественная перестановка;
    - identity reorder ничего не меняет;
    - shared structure = ordered list всех live section IDs;
    - locale-visible structure = ordered list видимых ID конкретной локали;
    - visible structure меняется тогда и только тогда, когда перестановка изменила относительный порядок видимых ID этой локали;
-   - перенос невидимого section через другие sections может менять shared structure и не менять visible structure;
+   - перенос невидимого section через другие sections может менять shared structure текущей draft locale и не менять visible structure другой locale до publication;
    - expected visible order считается из известного baseline + применённой permutation, а не из after-projection;
    - section component hashes при reorder не меняются.
 
@@ -55,15 +59,17 @@ shape и уже закрытого canonical serialization substrate.
    - partial section (heading есть, body пуст) консервативно invisible;
    - это только fixture hypothesis, production policy остаётся OPEN.
 
-6. **EN-only section**
+6. **EN-only section / schema characterization boundary**
    - EN-only addition меняет shared structure;
    - EN visible structure меняется;
-   - RU visible structure не меняется, если RU content отсутствует;
+   - RU visible structure не меняется, если RU content семантически отсутствует;
    - existing EN/RU section hashes не меняются;
    - фактическая RU row representation читается через published RU, draft RU и locale=all;
    - после добавления RU content в тот же section RU draft-visible меняется, published-visible — только после RU publication;
    - после RU publication RU visible structure меняется, shared structure уже не меняется, EN visible structure не меняется;
-   - зависимость locale-facing artifact от visible structure вместо shared — **условное наблюдение** для этого класса artifacts, не универсальный contract.
+   - зависимость locale-facing artifact от visible structure вместо shared — **условное наблюдение** для этого класса artifacts, не универсальный contract;
+   - текущая schema требует localized `heading`/`body`; test-only U+200B может сделать row schema-valid, но fixture-v0 invisible;
+   - U+200B — только техника characterization, **не production solution**.
 
 7. **Delete / tombstone / identity**
    - delete меняет shared structure;
@@ -83,10 +89,33 @@ shape и уже закрытого canonical serialization substrate.
    - verified draft, опубликованный без semantic change, сохраняет hash;
    - edit after verification меняет hash после publication.
 
+
+## Observed Payload characterization
+
+Это не desired workflow invariants, а экспериментально фиксируемое поведение Payload 3.90.2.
+Все такие checks в harness имеют префикс `observed:`.
+
+- shared/non-localized draft write через EN меняет EN draft projection, но не обязан сразу менять RU draft projection;
+- shared draft write через RU зеркально может существовать только в RU draft projection до publication;
+- publication конкретной locale может продвинуть shared state сразу в обе published locale projections;
+- та же publication может синхронизировать shared draft state другой locale;
+- pending shared change, внесённый через другую locale, может быть продвинут publication текущей locale;
+- conflict probes EN=A / RU=B выполняются в обоих publication orders и логируют draft/published values + hashes до первой publication, после первой и после второй;
+- exact conflict outcome (winner/loser preservation/order dependence) считается установленным только после committed-tree run и owner review;
+- unpublish semantics также относятся к Payload-specific characterization, а не к универсальному product contract.
+
+## OPEN schema/product issue: ADR-002 vs required localized fields
+
+Текущая test schema требует localized `heading` и `body`. Это означает, что реальный EN-only section без placeholder может упереться в validation другой locale. Такое поведение потенциально противоречит ADR-002 / принципу «translation parity не обязательна».
+
+В этом pass schema **не меняется**. Для отдельного invisible-section characterization используется U+200B, потому что он schema-valid, но fixture-v0 считает его semantically empty. Этот placeholder hack нельзя переносить в production.
+
+Отдельное schema-design решение должно определить conditional requiredness / validation по факту publication конкретной locale.
+
 ## Editorial workflow requirement
 
-Payload publication одной локали может протолкнуть накопленные shared draft changes,
-включая structure/applicability, в опубликованное состояние других локалей.
+Payload publication одной локали может протолкнуть pending shared changes,
+включая structure/applicability, в published state обеих locale projections и синхронизировать shared draft state другой locale.
 
 Поэтому Lifecycle должен требовать от production editorial workflow перед publication:
 
@@ -125,4 +154,13 @@ Payload publication одной локали может протолкнуть н
     npm run local-invalidation
 
 Harness сам повторяет structural probe в двух порядках на fresh fixtures.
-Результат становится EVIDENCE только после фактического PASS/FAIL output.
+
+Evidence procedure:
+
+1. изменения сначала коммитятся;
+2. рабочее дерево должно быть clean;
+3. оба clean runs выполняются на одном commit SHA;
+4. в отчёте фиксируются SHA, Node/npm, exact Payload version, PostgreSQL image/version и raw stdout/stderr;
+5. два прогона должны проверить structural scenarios в обоих deterministic orders;
+6. при PASS markdown получает только статус **PASS ON COMMITTED TREE — OWNER REVIEW PENDING**;
+7. только владелец после review может присвоить EVIDENCE / CLOSED / VERIFIED / APPROVED.
