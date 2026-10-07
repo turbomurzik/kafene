@@ -1514,8 +1514,9 @@ cheap deterministic check
 8. Anchor contract имеет `anchor_spec_version` и fallback
    `whole_normalized_main_content` без изменения формы manifest.
 9. Normalization contract имеет `normalization_profile_version`.
-10. Verification component hashes и generation input hashes разведены и имеют
-    versioned canonical serialization.
+10. Verification component hashes и generation input hashes разведены.
+    Serialization substrate и hash envelope versioned отдельно; component
+    projection имеет собственную versioned spec.
 11. Generation lineage строится из component inputs.
 12. Publication, verification и monitoring freshness разделены.
 13. Staleness является предикатом от часов и обнаруживается независимо от
@@ -1805,7 +1806,9 @@ monitoring spike:
 1. Конкретный source anchor format.
 2. ~~GuideSection storage shape на Payload 3.90.2 + Postgres.~~ **CLOSED:
    array shape selected by 10/10 schema-pass evidence.**
-3. Canonical serialization implementation для component/hash specs.
+3. ~~Canonical serialization substrate для component/hash specs.~~ **CLOSED:
+   `kafene-canonical-json-v1.1` + `kafene-sha256-domain-v1`, 22/22 schema-pass.
+   Component field-selection/projection и rich-text semantic projection остаются OPEN.**
 4. Initial KeyFact storage representation.
 5. Evidence persistence topology.
 6. Snapshot retention для non-referenced evidence.
@@ -1842,11 +1845,19 @@ architecture contract.
    - drafts/versioning;
    - manifest hashing.
    Evidence: `docs/research/GUIDE-SECTION-SCHEMA-PASS-RESULTS.md`.
-2. Canonical serialization determinism:
-   - key ordering;
-   - Unicode normalization;
-   - null/absence;
-   - rich-text serialization.
+2. Canonical serialization substrate — **PASS / CLOSED**:
+   - UTF-16 code-unit key ordering;
+   - Unicode NFC;
+   - null/absence semantics;
+   - integer-only numeric contract;
+   - fail-closed type/structure handling;
+   - deterministic escaping;
+   - domain-separated SHA-256 envelope;
+   - pinned golden vectors + independent Python cross-check.
+   Evidence: `docs/research/CANONICAL-SERIALIZATION-SCHEMA-PASS-RESULTS.md`.
+   Отдельно остаются OPEN:
+   - component field-selection / projection;
+   - rich-text semantic projection.
 3. Local invalidation:
    - RU change не инвалидирует EN;
    - section change затрагивает только её и dependent artifacts.
