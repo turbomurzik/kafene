@@ -27,17 +27,30 @@ const Guides: CollectionConfig = {
       type: 'array',
       required: true,
       minRows: 1,
+      admin: {
+        description: 'Structure and order are shared across locales. A localized row may be untranslated, partial, or complete in draft. Publication allows only untranslated or complete rows, and requires at least one complete row.',
+        initCollapsed: true,
+        components: {
+          RowLabel: './src/components/LocalizedSectionRowLabel#LocalizedSectionRowLabel',
+        },
+      },
       fields: [
         {
           name: 'sectionKey',
           type: 'text',
           required: true,
+          admin: {
+            description: 'Shared stable section identity. Do not translate or casually change this key.',
+          },
         },
         {
           name: 'heading',
           type: 'text',
           localized: true,
           required: false,
+          admin: {
+            description: 'Localized heading. Leave both heading and body empty for an untranslated row; partial rows may be saved as drafts but cannot be published.',
+          },
           hooks: {
             beforeChange: [collapseSemanticallyEmptyLocalizedField],
           },
@@ -47,6 +60,9 @@ const Guides: CollectionConfig = {
           type: 'textarea',
           localized: true,
           required: false,
+          admin: {
+            description: 'Localized body. Leave both heading and body empty for an untranslated row; partial rows may be saved as drafts but cannot be published.',
+          },
           hooks: {
             beforeChange: [collapseSemanticallyEmptyLocalizedField],
           },
