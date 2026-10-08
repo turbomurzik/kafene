@@ -1,6 +1,6 @@
 # Shared structure publication propagation diagnostic
 
-Status: **EXECUTABLE DIAGNOSTIC — RESULT UNKNOWN UNTIL RUN**
+Status: **RESULT RECORDED — OWNER REVIEW PENDING**
 
 Purpose: characterize one state that the consolidated localized-content contract exposed but the earlier reorder diagnostic did not cover directly:
 
@@ -20,3 +20,35 @@ The diagnostic prints four exact snapshots:
 - after RU republish.
 
 No propagation result is assumed in advance.
+
+
+## First observed run
+
+Tested commit: `a678967991b215bd90e5eefebfc5ecaf7381b362`.
+
+Observed on a fresh database:
+
+- baseline: EN and RU draft/published orders were `a,b,c`;
+- after EN draft reorder: EN draft became `c,a,b`, while RU draft and both published projections remained `a,b,c`;
+- after EN publish:
+  - EN published became `c,a,b`;
+  - RU draft remained `a,b,c`;
+  - RU published structural order became `c,a,b`;
+  - unexpectedly, RU published visible order became `c,b`, not the expected `c,a`;
+- after RU republish:
+  - RU draft still remained `a,b,c`;
+  - RU published order stayed `c,a,b`;
+  - RU published visible order became the expected `c,a`.
+
+This means the consolidated contract must **not** yet encode a stable cross-locale shared-reorder publication invariant.
+
+The visible-order anomaly after EN publication is material. It may indicate localized child values were temporarily associated with reordered array positions rather than the intended row identity, but the first run did not print enough per-row identity/value detail to establish that mechanism.
+
+The diagnostic runner is therefore extended to print, for every snapshot, each row's:
+
+- row `id`;
+- `sectionKey`;
+- localized `heading`;
+- localized `body`.
+
+A second fresh run is required before choosing production workflow or schema behavior.
