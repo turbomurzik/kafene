@@ -21,7 +21,7 @@ shape и уже закрытого canonical serialization substrate.
 
 Tested committed tree:
 
-- commit SHA: **4b56c2d24f3112cbde241bada145f143e1cd89e1**;
+- tested Local Invalidation SHA: **2601feba1bfae2ca01127c26eff060fb9d91d69e**;
 - Payload: **3.90.2**;
 - Node: **v22.14.0**;
 - npm: **10.9.2**;
@@ -30,7 +30,7 @@ Tested committed tree:
 
 Characterization tests с префиксом `observed:` служат upgrade sentinel: изменение их поведения при обновлении Payload требует отдельного review.
 
-Два независимых clean runs выполнены на одном и том же committed SHA с удалением volume между прогонами. Оба завершились **23/23 PASS**.
+После исправления malformed reorder update два независимых clean runs выполнены на одном и том же committed SHA `2601feba1bfae2ca01127c26eff060fb9d91d69e` с удалением volume между прогонами. Оба завершились **23/23 PASS**.
 
 ## Проверяемые invariants
 
@@ -205,7 +205,7 @@ Evidence procedure:
 
 ### Completed run record
 
-Tested commit: `4b56c2d24f3112cbde241bada145f143e1cd89e1`.
+Tested commit: `2601feba1bfae2ca01127c26eff060fb9d91d69e`.
 
 - Clean run 1: **23/23 PASS**.
 - Clean run 2: **23/23 PASS**.
