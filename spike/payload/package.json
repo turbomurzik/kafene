@@ -13,7 +13,8 @@
     "publish-context-diagnostic": "NODE_ENV=development tsx src/run-publish-context-diagnostic.ts",
     "localized-section-semantics": "NODE_ENV=test tsx --test src/localized-section-semantics.test.ts",
     "localized-field-collapse": "NODE_ENV=development tsx src/run-localized-field-collapse.ts",
-    "localized-publish-policy": "NODE_ENV=development tsx src/run-localized-publish-policy.ts"
+    "localized-publish-policy": "NODE_ENV=development tsx src/run-localized-publish-policy.ts",
+    "localized-section-projection": "NODE_ENV=test tsx --test src/localized-section-projection.test.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
