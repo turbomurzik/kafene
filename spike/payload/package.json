@@ -7,7 +7,8 @@
     "guide-sections": "NODE_ENV=development tsx src/run-guide-section-schema-pass.ts",
     "canonical-serialization": "NODE_ENV=development tsx src/run-canonical-serialization-schema-pass.ts",
     "canonical-serialization-diagnose": "NODE_ENV=development tsx src/diagnose-canonical-serialization.ts",
-    "local-invalidation": "NODE_ENV=development tsx src/run-local-invalidation-schema-pass.ts"
+    "local-invalidation": "NODE_ENV=development tsx src/run-local-invalidation-schema-pass.ts",
+    "reorder-diagnostic": "NODE_ENV=development tsx src/run-reorder-diagnostic.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
