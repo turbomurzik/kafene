@@ -14,7 +14,8 @@
     "localized-section-semantics": "NODE_ENV=test tsx --test src/localized-section-semantics.test.ts",
     "localized-field-collapse": "NODE_ENV=development tsx src/run-localized-field-collapse.ts",
     "localized-publish-policy": "NODE_ENV=development tsx src/run-localized-publish-policy.ts",
-    "localized-section-projection": "NODE_ENV=test tsx --test src/localized-section-projection.test.ts"
+    "localized-section-projection": "NODE_ENV=test tsx --test src/localized-section-projection.test.ts",
+    "localized-section-admin": "NODE_ENV=test tsx --test src/localized-section-admin.test.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
