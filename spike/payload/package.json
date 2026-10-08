@@ -10,7 +10,8 @@
     "local-invalidation": "NODE_ENV=development tsx src/run-local-invalidation-schema-pass.ts",
     "reorder-diagnostic": "NODE_ENV=development tsx src/run-reorder-diagnostic.ts",
     "publish-policy-diagnostic": "NODE_ENV=development tsx src/run-publish-policy-diagnostic.ts",
-    "publish-context-diagnostic": "NODE_ENV=development tsx src/run-publish-context-diagnostic.ts"
+    "publish-context-diagnostic": "NODE_ENV=development tsx src/run-publish-context-diagnostic.ts",
+    "localized-section-semantics": "NODE_ENV=test tsx --test src/localized-section-semantics.test.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
