@@ -1,6 +1,6 @@
 # Local Invalidation schema-pass
 
-Статус: **EXECUTABLE TEST — OWNER REVIEW REQUIRED; агент не присваивает EVIDENCE/CLOSED**
+Статус: **PASS ON COMMITTED TREE — OWNER REVIEW PENDING**
 
 Цель — проверить локальность invalidation поверх реальной Payload Guide array
 shape и уже закрытого canonical serialization substrate.
@@ -19,9 +19,18 @@ shape и уже закрытого canonical serialization substrate.
 
 ## Environment / upgrade sentinel
 
-- Payload: **3.90.2** (точная версия из `spike/payload/package.json`);
+Tested committed tree:
+
+- commit SHA: **4b56c2d24f3112cbde241bada145f143e1cd89e1**;
+- Payload: **3.90.2**;
+- Node: **v22.14.0**;
+- npm: **10.9.2**;
 - PostgreSQL image: **postgres:16-alpine**;
-- characterization tests с префиксом `observed:` служат upgrade sentinel: изменение их поведения при обновлении Payload требует отдельного review.
+- runtime PostgreSQL: **16.15**.
+
+Characterization tests с префиксом `observed:` служат upgrade sentinel: изменение их поведения при обновлении Payload требует отдельного review.
+
+Два независимых clean runs выполнены на одном и том же committed SHA с удалением volume между прогонами. Оба завершились **23/23 PASS**.
 
 ## Проверяемые invariants
 
@@ -101,14 +110,14 @@ shape и уже закрытого canonical serialization substrate.
 - та же publication может синхронизировать shared draft state другой locale;
 - pending shared change, внесённый через другую locale, может быть продвинут publication текущей locale;
 - conflict probes EN=A / RU=B выполняются в обоих publication orders;
-- committed clean run на `2c0ba785c2704692aeff1039878e2cede7e3bbfd` показал: после EN=A затем RU=B обе draft projections уже содержат B до publication; A не сохраняется как отдельный pending shared draft;
+- clean runs на tested commit `4b56c2d24f3112cbde241bada145f143e1cd89e1` подтвердили: после EN=A затем RU=B обе draft projections уже содержат B до publication; A не сохраняется как отдельный pending shared draft;
 - первая publication (EN или RU) публикует B в обе locale projections; вторая publication ничего не меняет;
 - для этого сценария наблюдаемая semantics = **last shared draft write wins before publication; publication order irrelevant**;
 - unpublish semantics также относятся к Payload-specific characterization, а не к универсальному product contract.
 
 ## Observed structural edge case: reorder ignored after locale-specific invisibility publication
 
-Committed clean run на `2c0ba785c2704692aeff1039878e2cede7e3bbfd` дал `diff = []` для EN reorder после того, как RU section был сделан fixture-v0 invisible и RU был опубликован.
+Оба clean runs на tested commit `4b56c2d24f3112cbde241bada145f143e1cd89e1` дали `diff = []` для EN reorder после того, как RU section был сделан fixture-v0 invisible и RU был опубликован.
 
 Это не трактуется как успешный reorder. Harness теперь:
 - доказывает, что target permutation нетождественна текущему EN order;
@@ -195,3 +204,18 @@ Evidence procedure:
 5. два прогона должны проверить structural scenarios в обоих deterministic orders;
 6. при PASS markdown получает только статус **PASS ON COMMITTED TREE — OWNER REVIEW PENDING**;
 7. только владелец после review может присвоить EVIDENCE / CLOSED / VERIFIED / APPROVED.
+
+### Completed run record
+
+Tested commit: `4b56c2d24f3112cbde241bada145f143e1cd89e1`.
+
+- Clean run 1: **23/23 PASS**.
+- Clean run 2: **23/23 PASS**.
+- Both runs used fresh PostgreSQL state via `docker compose down -v` / `up -d`.
+- Structural probe passed in both deterministic orders.
+- Lost-update invariant passed: EN publication did not destroy unpublished RU localized draft.
+- Shared-conflict characterization reproduced in both publication orders: second shared draft write B replaced A before publication; first publication published B globally; second publication was a no-op.
+- Locale-specific invisibility reorder edge case reproduced: target EN permutation was non-identity, but Payload kept the prior EN order and produced exact no-op.
+- No production code or production schema changes are part of this pass.
+
+Raw stdout/stderr for both clean runs was captured by the owner during review execution and is external to this repository record.
