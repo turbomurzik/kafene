@@ -115,17 +115,15 @@ Characterization tests с префиксом `observed:` служат upgrade se
 - для этого сценария наблюдаемая semantics = **last shared draft write wins before publication; publication order irrelevant**;
 - unpublish semantics также относятся к Payload-specific characterization, а не к универсальному product contract.
 
-## Observed structural edge case: reorder ignored after locale-specific invisibility publication
+## Resolved harness defect: malformed reorder update
 
-Оба clean runs на tested commit `4b56c2d24f3112cbde241bada145f143e1cd89e1` дали `diff = []` для EN reorder после того, как RU section был сделан fixture-v0 invisible и RU был опубликован.
+Предыдущее наблюдение `ignored reorder` оказалось **дефектом тестового harness**, а не Payload semantics.
 
-Это не трактуется как успешный reorder. Harness теперь:
-- доказывает, что target permutation нетождественна текущему EN order;
-- ожидает exact no-op;
-- проверяет, что фактический EN order остался прежним;
-- логирует before/target/after IDs.
+В edge-case update был сформирован как `data: targetRows.map(...)` вместо корректного `data: { sections: targetRows.map(...) }`. Payload получил некорректную shape для document data и фактически выполнил no-op.
 
-Пока это **observed Payload characterization / possible product risk**, а не desired invariant. Если повторный committed-tree run подтвердит поведение, нужен отдельный schema/workflow design review: почему structurally valid reorder игнорируется в этом version state.
+Отдельный diagnostic pass на корректно сформированных update payloads показал `APPLIED` для baseline, normal-RU, RU-draft-only, optional-localized-null и plain-array случаев. Поэтому прежний `ignored reorder` product risk снят.
+
+Local Invalidation harness исправлен: после RU-only invisibility publication EN reorder теперь должен менять ровно EN draft shared structure + EN visible structure, не меняя RU draft projection.
 
 ## OPEN schema/product issue: ADR-002 vs required localized fields
 
@@ -215,7 +213,7 @@ Tested commit: `4b56c2d24f3112cbde241bada145f143e1cd89e1`.
 - Structural probe passed in both deterministic orders.
 - Lost-update invariant passed: EN publication did not destroy unpublished RU localized draft.
 - Shared-conflict characterization reproduced in both publication orders: second shared draft write B replaced A before publication; first publication published B globally; second publication was a no-op.
-- Locale-specific invisibility reorder edge case reproduced: target EN permutation was non-identity, but Payload kept the prior EN order and produced exact no-op.
+- Предыдущее locale-specific invisibility reorder no-op позднее признано harness defect из-за malformed `data` shape; это не Payload finding.
 - No production code or production schema changes are part of this pass.
 
 Raw stdout/stderr for both clean runs was captured by the owner during review execution and is external to this repository record.
