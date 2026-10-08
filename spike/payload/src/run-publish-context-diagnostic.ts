@@ -53,7 +53,11 @@ async function read(id: string, locale: 'en' | 'ru', draft = true) {
   } as any) as Promise<Row>
 }
 
-async function runCase(label: string, args: Record<string, unknown>) {
+async function runCase(
+  label: string,
+  args: Record<string, unknown>,
+  expected?: { en: 'draft' | 'published'; ru: 'draft' | 'published' },
+) {
   const id = await createGuide()
   console.log(`CASE ${label} BEGIN`)
   let outcome = 'ok'
@@ -68,13 +72,26 @@ async function runCase(label: string, args: Record<string, unknown>) {
     outcome = `error: ${error instanceof Error ? error.message : String(error)}`
   }
 
-  const en = await read(id, 'en', true)
-  const ru = await read(id, 'ru', true)
-  console.log(`CASE ${label} RESULT:`, JSON.stringify({
+  const enDraftView = await read(id, 'en', true)
+  const ruDraftView = await read(id, 'ru', true)
+  const enPublishedView = await read(id, 'en', false)
+  const ruPublishedView = await read(id, 'ru', false)
+
+  const result = {
     outcome,
-    enStatus: en._status ?? null,
-    ruStatus: ru._status ?? null,
-  }))
+    enDraftViewStatus: enDraftView._status ?? null,
+    ruDraftViewStatus: ruDraftView._status ?? null,
+    enPublishedViewStatus: enPublishedView._status ?? null,
+    ruPublishedViewStatus: ruPublishedView._status ?? null,
+  }
+
+  if (expected) {
+    assert.equal(outcome, 'ok')
+    assert.equal(enPublishedView._status, expected.en)
+    assert.equal(ruPublishedView._status, expected.ru)
+  }
+
+  console.log(`CASE ${label} RESULT:`, JSON.stringify(result))
 }
 
 await runCase('A locale=en publishSpecificLocale=ru', {
@@ -83,7 +100,7 @@ await runCase('A locale=en publishSpecificLocale=ru', {
   publishSpecificLocale: 'ru',
   draft: false,
   data: { _status: 'published' },
-})
+}, { en: 'draft', ru: 'published' })
 
 await runCase('B locale=ru publishSpecificLocale=ru', {
   locale: 'ru',
@@ -91,14 +108,14 @@ await runCase('B locale=ru publishSpecificLocale=ru', {
   publishSpecificLocale: 'ru',
   draft: false,
   data: { _status: 'published' },
-})
+}, { en: 'draft', ru: 'published' })
 
 await runCase('C locale=en no publishSpecificLocale', {
   locale: 'en',
   fallbackLocale: false,
   draft: false,
   data: { _status: 'published' },
-})
+}, { en: 'published', ru: 'draft' })
 
 await runCase('D locale=all object status', {
   locale: 'all',
