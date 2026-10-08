@@ -40,6 +40,15 @@ function visibleOrder(doc: Row): string[] {
   return projectLocalizedDocument(doc).sections.map((row: Row) => String(row.sectionKey))
 }
 
+function rowState(doc: Row) {
+  return (doc.sections as Row[]).map((row) => ({
+    id: String(row.id),
+    sectionKey: String(row.sectionKey),
+    heading: row.heading ?? null,
+    body: row.body ?? null,
+  }))
+}
+
 async function snapshot(id: string, label: string) {
   const enDraft = await read(id, 'en', true)
   const ruDraft = await read(id, 'ru', true)
@@ -48,10 +57,30 @@ async function snapshot(id: string, label: string) {
 
   const result = {
     label,
-    enDraft: { order: order(enDraft), visible: visibleOrder(enDraft), status: enDraft._status ?? null },
-    ruDraft: { order: order(ruDraft), visible: visibleOrder(ruDraft), status: ruDraft._status ?? null },
-    enPublished: { order: order(enPublished), visible: visibleOrder(enPublished), status: enPublished._status ?? null },
-    ruPublished: { order: order(ruPublished), visible: visibleOrder(ruPublished), status: ruPublished._status ?? null },
+    enDraft: {
+      order: order(enDraft),
+      visible: visibleOrder(enDraft),
+      status: enDraft._status ?? null,
+      rows: rowState(enDraft),
+    },
+    ruDraft: {
+      order: order(ruDraft),
+      visible: visibleOrder(ruDraft),
+      status: ruDraft._status ?? null,
+      rows: rowState(ruDraft),
+    },
+    enPublished: {
+      order: order(enPublished),
+      visible: visibleOrder(enPublished),
+      status: enPublished._status ?? null,
+      rows: rowState(enPublished),
+    },
+    ruPublished: {
+      order: order(ruPublished),
+      visible: visibleOrder(ruPublished),
+      status: ruPublished._status ?? null,
+      rows: rowState(ruPublished),
+    },
   }
 
   console.log('STRUCTURE SNAPSHOT:', JSON.stringify(result))
@@ -127,6 +156,14 @@ assert.deepEqual(afterDraft.ruPublished.order, ['a', 'b', 'c'])
 await publish(id, 'en')
 const afterEnPublish = await snapshot(id, 'AFTER EN PUBLISH')
 
+const ruPublishedByKeyAfterEnPublish = Object.fromEntries(
+  afterEnPublish.ruPublished.rows.map((row: Row) => [row.sectionKey, {
+    id: row.id,
+    heading: row.heading,
+    body: row.body,
+  }]),
+)
+
 console.log('DIAGNOSTIC RESULT:', JSON.stringify({
   enPublishAdvancedEnPublished:
     JSON.stringify(afterEnPublish.enPublished.order) === JSON.stringify(['c', 'a', 'b']),
@@ -134,6 +171,7 @@ console.log('DIAGNOSTIC RESULT:', JSON.stringify({
     JSON.stringify(afterEnPublish.ruDraft.order) === JSON.stringify(['c', 'a', 'b']),
   enPublishAdvancedRuPublished:
     JSON.stringify(afterEnPublish.ruPublished.order) === JSON.stringify(['c', 'a', 'b']),
+  ruPublishedByKeyAfterEnPublish,
 }))
 
 await publish(id, 'ru')
@@ -142,6 +180,7 @@ const afterRuRepublish = await snapshot(id, 'AFTER RU REPUBLISH')
 console.log('DIAGNOSTIC AFTER RU REPUBLISH:', JSON.stringify({
   ruDraftOrder: afterRuRepublish.ruDraft.order,
   ruPublishedOrder: afterRuRepublish.ruPublished.order,
+  ruPublishedRows: afterRuRepublish.ruPublished.rows,
 }))
 
 await payload.destroy()
