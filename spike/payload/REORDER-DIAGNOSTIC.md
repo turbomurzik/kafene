@@ -1,6 +1,6 @@
 # Payload reorder diagnostic pass
 
-Статус: **EXECUTABLE DIAGNOSTIC — RESULT UNKNOWN UNTIL RUN**
+Статус: **DIAGNOSTIC COMPLETE — OWNER REVIEW PENDING**
 
 Цель — минимально различить причины observed edge case, где EN reorder silently becomes a no-op после RU locale-specific invisibility publication.
 
@@ -80,3 +80,30 @@ From `spike/payload`:
     npm run reorder-diagnostic
 
 Return the complete output, especially every `DIAG T0...T6` line and PASS/FAIL summary.
+
+
+## Result
+
+Tested commit: `c1f496b29ce5500d245402a80491d3ffe0d18579`.
+
+Все пять сценариев завершились PASS:
+
+- T0 baseline + raw DB/version evidence: **APPLIED**; update return и refetch содержат target order; version count 9 → 10; version rows записаны в новом порядке.
+- T1 normal RU content: **APPLIED**.
+- T2 RU invisible draft only: **APPLIED**.
+- T4 optional localized null: **APPLIED**; RU published row реально содержит `heading:null, body:null`.
+- T6 array without localized row fields: **APPLIED**.
+
+### Conclusion
+
+Diagnostic **не воспроизвёл Payload reorder defect**. Причина прежнего no-op обнаружена в Local Invalidation harness: edge-case update передавал массив прямо в `data`, вместо document object `{ sections: [...] }`.
+
+Следовательно:
+
+- гипотеза отдельного Payload reorder limitation для этого сценария снимается;
+- C из архитектурного verdict не требуется на основании этого кейса;
+- основным остаётся B: общая структура + localized text sound, но localized content fields должны поддерживать translation parity optional;
+- T4 подтверждает техническую жизнеспособность schema direction `required:false` + реальные `null` для отсутствующей локали;
+- publish-time completeness policy всё ещё требует отдельного schema-design pass и тестов; diagnostic её не реализует.
+
+Никаких production code/schema изменений в этом diagnostic не делалось.
