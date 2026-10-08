@@ -16,6 +16,11 @@ export function isSemanticallyEmpty(value: unknown): boolean {
     .length === 0
 }
 
+export function collapseSemanticallyEmptyToNull(value: unknown): unknown {
+  if (typeof value !== 'string') return value
+  return isSemanticallyEmpty(value) ? null : value
+}
+
 export function classifyLocalizedPair(
   heading: unknown,
   body: unknown,
