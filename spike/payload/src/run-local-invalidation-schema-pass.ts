@@ -784,8 +784,9 @@ await check('identity reorder is a no-op', async () => {
   assertExactChanged(snapshotDiff(before, after), [])
 })
 
-await check('observed: EN reorder after RU-only invisibility publication is ignored', async () => {
+await check('EN reorder remains effective after RU-only invisibility publication', async () => {
   const f = await createFreshGuide('invisible-reorder')
+  const i = ids(f.id, f.sectionIds)
 
   const ru = await readGuide(f.id, 'ru', 'draft')
   await payload.update({
@@ -822,28 +823,26 @@ await check('observed: EN reorder after RU-only invisibility publication is igno
     locale: 'en',
     fallbackLocale: false,
     draft: true,
-    data: targetRows.map((row) => ({
-      id: row.id,
-      sectionKey: row.sectionKey,
-      heading: row.heading,
-      body: row.body,
-    })),
+    data: {
+      sections: targetRows.map((row) => ({
+        id: row.id,
+        sectionKey: row.sectionKey,
+        heading: row.heading,
+        body: row.body,
+      })),
+    },
     overrideAccess: true,
   } as any)
 
   const after = await snapshotAll(f.id)
   const afterEn = await readGuide(f.id, 'en', 'draft')
   const afterEnIds = (afterEn.sections as Row[]).map((row) => String(row.id))
-  assertExactChanged(snapshotDiff(before, after), [])
-  assert.deepEqual(afterEnIds, beforeEnIds)
+  assertExactChanged(snapshotDiff(before, after), [
+    viewKey('draft', 'en', i.structure),
+    viewKey('draft', 'en', i.visibleEn),
+  ])
+  assert.deepEqual(afterEnIds, targetIds)
   assert.deepEqual(visibleIdsV0(await readGuide(f.id, 'ru', 'draft')), beforeRuVisibleIds)
-
-  console.log('CHAR  ignored EN reorder after RU invisibility publish:', JSON.stringify({
-    beforeEnIds,
-    targetIds,
-    afterEnIds,
-    ruVisibleIds: beforeRuVisibleIds,
-  }))
 })
 
 await check('EN-only section: shared changes, RU visible stays stable; RU row representation is characterized', async () => {
