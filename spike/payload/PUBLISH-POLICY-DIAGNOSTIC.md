@@ -1,6 +1,6 @@
 # Publish policy schema-design diagnostic
 
-Статус: **EXECUTABLE DIAGNOSTIC — RESULT UNKNOWN UNTIL RUN**
+Статус: **PASS ON COMMITTED TREE — OWNER REVIEW PENDING**
 
 Цель — проверить ADR-002-compatible schema direction без изменения production schema:
 
@@ -104,3 +104,32 @@ Expected:
     npm run publish-policy-diagnostic
 
 Нужен полный output, включая строки `POLICY HOOK`, `POLICY T*`, expected rejects и итог X/5.
+
+
+## Result
+
+Tested commit: `10e1e0cd64fc9dfe9da607b07f2a48b96b231d5f`.
+
+Result: **5/5 PASS**.
+
+Observed:
+
+- T1: EN publication succeeds with no RU translation; RU remains draft and shared rows project as `null/null`.
+- T2: RU publication succeeds when one shared row is translated and another remains `null/null`.
+- T3: partial RU draft (`heading` present, `body=null`) is accepted and preserved.
+- T4: publication of the same partial RU row is rejected by publish-time completeness policy.
+- T5: U+200B / U+FEFF-only pair is classified as semantically empty; meaningful heading + invisible body is rejected as partial.
+
+### Architectural conclusion
+
+ADR-002-compatible schema direction is technically viable on Payload 3.90.2:
+
+- shared `sections` array;
+- shared required `sectionKey`;
+- localized `heading` and `body` optional at schema level;
+- untranslated locale represented by `null/null`;
+- incomplete localized drafts allowed;
+- completeness enforced only when publishing the affected locale;
+- semantic emptiness must normalize/strip Unicode Z/Cc/Cf before validation.
+
+This diagnostic does not yet select the final production hook/API shape. It establishes lifecycle semantics only.
