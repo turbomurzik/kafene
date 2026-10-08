@@ -186,7 +186,7 @@ console.log('CONTRACT CASE 5 PASS:', JSON.stringify({
   projected: projectedRu.sections.map((row: Row) => row.sectionKey),
 }))
 
-console.log('CONTRACT CASE 6 shared reorder preserves locale values and projection order BEGIN')
+console.log('CONTRACT CASE 6 EN draft reorder stays locale-local until publication, then shared order advances BEGIN')
 await payload.update({
   collection: 'impl-localized-publish-policy',
   id,
@@ -219,25 +219,56 @@ await payload.update({
   },
 } as any)
 
-const enReordered = await read(id, 'en', true)
-const ruAfterReorder = await read(id, 'ru', true)
+const enReorderedDraft = await read(id, 'en', true)
+const ruBeforeEnPublish = await read(id, 'ru', true)
 
 assert.deepEqual(
-  (enReordered.sections as Row[]).map((row) => row.sectionKey),
+  (enReorderedDraft.sections as Row[]).map((row) => row.sectionKey),
   ['c', 'a', 'b'],
 )
 assert.deepEqual(
-  (ruAfterReorder.sections as Row[]).map((row) => row.sectionKey),
+  (ruBeforeEnPublish.sections as Row[]).map((row) => row.sectionKey),
+  ['a', 'b', 'c'],
+)
+assert.equal(ruBeforeEnPublish.sections[0].heading, 'Альфа')
+assert.equal(ruBeforeEnPublish.sections[1].heading, null)
+assert.equal(ruBeforeEnPublish.sections[2].heading, 'Гамма')
+assert.deepEqual(
+  projectLocalizedDocument(ruBeforeEnPublish).sections.map((row: Row) => row.sectionKey),
+  ['a', 'c'],
+)
+
+await publish(id, 'en')
+
+const ruAfterEnPublishDraft = await read(id, 'ru', true)
+const ruAfterEnPublishPublished = await read(id, 'ru', false)
+
+assert.deepEqual(
+  (ruAfterEnPublishDraft.sections as Row[]).map((row) => row.sectionKey),
   ['c', 'a', 'b'],
 )
-assert.equal(ruAfterReorder.sections[0].heading, 'Гамма')
-assert.equal(ruAfterReorder.sections[1].heading, 'Альфа')
-assert.equal(ruAfterReorder.sections[2].heading, null)
 assert.deepEqual(
-  projectLocalizedDocument(ruAfterReorder).sections.map((row: Row) => row.sectionKey),
+  (ruAfterEnPublishPublished.sections as Row[]).map((row) => row.sectionKey),
+  ['c', 'a', 'b'],
+)
+assert.equal(ruAfterEnPublishDraft.sections[0].heading, 'Гамма')
+assert.equal(ruAfterEnPublishDraft.sections[1].heading, 'Альфа')
+assert.equal(ruAfterEnPublishDraft.sections[2].heading, null)
+assert.deepEqual(
+  projectLocalizedDocument(ruAfterEnPublishDraft).sections.map((row: Row) => row.sectionKey),
   ['c', 'a'],
 )
-console.log('CONTRACT CASE 6 PASS')
+assert.deepEqual(
+  projectLocalizedDocument(ruAfterEnPublishPublished).sections.map((row: Row) => row.sectionKey),
+  ['c', 'a'],
+)
+
+console.log('CONTRACT CASE 6 PASS:', JSON.stringify({
+  enDraftAfterReorder: (enReorderedDraft.sections as Row[]).map((row) => row.sectionKey),
+  ruDraftBeforeEnPublish: (ruBeforeEnPublish.sections as Row[]).map((row) => row.sectionKey),
+  ruDraftAfterEnPublish: (ruAfterEnPublishDraft.sections as Row[]).map((row) => row.sectionKey),
+  ruPublishedAfterEnPublish: (ruAfterEnPublishPublished.sections as Row[]).map((row) => row.sectionKey),
+}))
 
 console.log('CONTRACT CASE 7 locale=all publish intent fails closed BEGIN')
 await expectReject(
