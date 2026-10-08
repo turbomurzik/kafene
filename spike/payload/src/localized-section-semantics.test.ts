@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   classifyLocalizedPair,
+  collapseSemanticallyEmptyToNull,
   isSemanticallyEmpty,
   isVisibleSection,
 } from './localized-section-semantics.js'
@@ -50,6 +51,43 @@ test('known out-of-rule invisible-looking characters remain meaningful', () => {
   for (const value of ['\u2800', '\u3164', '\u115F']) {
     assert.equal(isSemanticallyEmpty(value), false, JSON.stringify(value))
   }
+})
+
+test('collapseSemanticallyEmptyToNull collapses only entirely empty strings', () => {
+  const emptyVectors = [
+    '',
+    ' ',
+    '\t\n',
+    '\u00A0',
+    '\u3000',
+    '\u200B',
+    '\uFEFF',
+    '\u00AD',
+    '\u2060',
+    ' \u200B\uFEFF ',
+  ]
+
+  for (const value of emptyVectors) {
+    assert.equal(collapseSemanticallyEmptyToNull(value), null, JSON.stringify(value))
+  }
+
+  const meaningfulVectors = [
+    'a',
+    ' a ',
+    'a\u200B',
+    'می\u200Cروم',
+    'e\u0301',
+    '\u0301',
+    '❤️',
+  ]
+
+  for (const value of meaningfulVectors) {
+    assert.equal(collapseSemanticallyEmptyToNull(value), value, JSON.stringify(value))
+  }
+
+  assert.equal(collapseSemanticallyEmptyToNull(null), null)
+  assert.equal(collapseSemanticallyEmptyToNull(undefined), undefined)
+  assert.equal(collapseSemanticallyEmptyToNull(0), 0)
 })
 
 test('classifyLocalizedPair returns untranslated, partial and complete states', () => {
