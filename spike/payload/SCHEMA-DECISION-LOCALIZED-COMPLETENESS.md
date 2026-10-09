@@ -1,16 +1,29 @@
 # Schema decision: localized section completeness
 
-Status: **PROPOSED — OWNER REVIEW PENDING**
+Status: **BLOCKED BY SHARED-ARRAY LOCALIZATION HAZARD — OWNER REVIEW PENDING**
 
-## Decision
+## Decision status
 
-Keep the Guide section structure shared across locales.
+The completeness semantics below remain the intended product contract, but the previously proposed physical Payload representation is now blocked.
 
-For section rows:
+Do **not** ship the following Payload 3.90.2 representation as production schema:
 
-- `sectionKey`: shared, required;
-- `heading`: localized, optional at schema level;
-- `body`: localized, optional at schema level.
+- one shared `sections` array;
+- shared `sectionKey` inside each row;
+- localized `heading` / `body` child fields inside those same array rows.
+
+A fresh diagnostic reproduced a cross-locale publication hazard where publishing an EN reorder moved the RU published array structure but reassigned RU localized child values by array position rather than row identity.
+
+The replacement schema must preserve shared section identity/order without storing locale-specific content as localized child fields inside the reorderable shared array.
+
+The semantic contract remains:
+
+- stable shared `sectionKey`;
+- locale-specific heading/body;
+- translation parity not required;
+- drafts may be untranslated, partial, or complete;
+- publication allows only untranslated or complete rows;
+- at least one complete/visible section is required.
 
 Translation parity is not required.
 
@@ -55,9 +68,9 @@ For locale-specific Local API publication:
 
 For `locale=all`, the hook can receive object-valued localized `_status`. The tested object-status update did not publish either locale. Production v1 should fail closed for publish-validation paths with `req.locale === "all"` unless a supported multi-locale publication contract is added deliberately.
 
-## Why
+## Why the semantic contract remains
 
-This preserves the product requirement in ADR-002:
+The intended contract still preserves the product requirement in ADR-002:
 
 - EN content can exist and be published before RU translation;
 - RU publication is not blocked merely because a shared row exists only in EN;
@@ -75,13 +88,17 @@ Payload 3.90.2 publish-policy diagnostic on commit `10e1e0cd64fc9dfe9da607b07f2a
 - partial RU publish rejected by publish-time policy;
 - Unicode-only emptiness handled as intended.
 
-The earlier suspected reorder defect was separately disproved and traced to malformed test-harness update data.
+The earlier suspected simple reorder defect was separately disproved and traced to malformed test-harness update data.
+
+A later, different diagnostic found a real cross-locale publication hazard that the earlier reorder test did not cover: after both locales were published, an EN reorder followed by EN publication caused the RU published snapshot to adopt the new row order while RU localized child values remained position-aligned. A subsequent RU republish repaired the values. This blocks the shared-array/localized-child production representation.
 
 Publish-context diagnostic on commit `3482dfefbe7641c2efabbd1347fa53e49afd9961` produced the same expected A/B/C persisted publication results on two clean runs and characterized the `locale=all` object-status path.
 
 ## Implementation shape
 
-Current proposed v1 implementation shape:
+The helper/policy work remains reusable, but the storage shape must change before production wiring.
+
+Reusable pieces:
 
 - pure semantic helper with no Payload/I/O dependency;
 - field-level normalization may collapse values that are entirely semantically empty to `null`, while mixed meaningful content is preserved as entered;
@@ -92,7 +109,13 @@ Current proposed v1 implementation shape:
 - `req.locale === "all"` publish validation fails closed in v1;
 - server visibility/projection uses the same canonical completeness classifier;
 - Admin v1 surfaces row state and clear validation messages without custom heavy field components;
-- shared structural edits remain a workflow rule for now rather than a hard field access restriction.
+- Admin row-state semantics and validation messages.
+
+Storage redesign requirement:
+
+- shared reorderable structure must not carry localized child fields whose persistence can become position-aligned across locale publication;
+- localized content should instead be keyed by stable section identity outside the reorderable shared array, or moved to a separate identity-bearing collection;
+- the replacement shape requires its own clean diagnostic before production integration.
 
 ## Still open
 
