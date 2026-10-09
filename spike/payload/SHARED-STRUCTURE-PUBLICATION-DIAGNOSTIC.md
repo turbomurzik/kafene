@@ -52,3 +52,35 @@ The diagnostic runner is therefore extended to print, for every snapshot, each r
 - localized `body`.
 
 A second fresh run is required before choosing production workflow or schema behavior.
+
+
+## Second observed run: row identity/value capture
+
+Tested commit: `4dc65eeff66e40725918a8d00fdc3f4e7636d428`.
+
+Fresh-database rerun reproduced the anomaly and printed row IDs plus localized values.
+
+After EN draft reorder `a,b,c -> c,a,b` and EN publication:
+
+- EN published order became `c,a,b`;
+- RU draft remained `a,b,c` with the correct RU values;
+- RU published order became `c,a,b`, but RU localized values were reassigned by array position rather than by row identity:
+  - row `c` / id ending `...250d` received RU value from former row `a` (`Альфа`);
+  - row `a` / id ending `...250b` received the former untranslated `b` value (`null/null`);
+  - row `b` / id ending `...250c` received RU value from former row `c` (`Гамма`).
+
+Therefore the intermediate RU published snapshot was structurally `c,a,b` but semantically misaligned.
+
+A subsequent RU republish repaired the localized values against the reordered row identities:
+
+- `c -> Гамма`;
+- `a -> Альфа`;
+- `b -> null/null`.
+
+### Consequence
+
+For Payload 3.90.2, the candidate model “shared array rows with localized child fields” is unsafe for production when a shared reorder in one locale is published while another locale already has published localized child values.
+
+This is stronger than a workflow-only caveat: an externally readable published locale can temporarily contain localized content attached to the wrong section identity.
+
+The current shared-array/localized-child candidate must therefore remain blocked pending schema redesign. The result does not by itself establish whether Payload considers this behavior a bug or a supported consequence of localized array-child storage.
