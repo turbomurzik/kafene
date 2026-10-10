@@ -224,7 +224,29 @@ await expectReject(
 )
 console.log('KEYED CONTRACT CASE 6 PASS')
 
-console.log('KEYED CONTRACT CASE 7 locale=all publish fails closed BEGIN')
+console.log('KEYED CONTRACT CASE 7 duplicate sectionKey is rejected BEGIN')
+await expectReject(
+  'duplicate sectionKey',
+  () => payload.update({
+    collection: 'diag-keyed-localized-content',
+    id,
+    locale: 'en',
+    fallbackLocale: false,
+    draft: true,
+    overrideAccess: true,
+    data: {
+      sections: [
+        { id: ids[0], sectionKey: 'a' },
+        { id: ids[1], sectionKey: 'a' },
+        { id: ids[2], sectionKey: 'c' },
+      ],
+    },
+  } as any),
+  /Duplicate sectionKey values are not allowed: a/,
+)
+console.log('KEYED CONTRACT CASE 7 PASS')
+
+console.log('KEYED CONTRACT CASE 8 locale=all publish fails closed BEGIN')
 await expectReject(
   'locale=all publish',
   () => payload.update({
@@ -238,7 +260,7 @@ await expectReject(
   } as any),
   /locale=all is not supported/,
 )
-console.log('KEYED CONTRACT CASE 7 PASS')
+console.log('KEYED CONTRACT CASE 8 PASS')
 
-console.log('KEYED LOCALIZED CONTENT CONTRACT: 7/7 PASS')
+console.log('KEYED LOCALIZED CONTENT CONTRACT: 8/8 PASS')
 await payload.destroy()
