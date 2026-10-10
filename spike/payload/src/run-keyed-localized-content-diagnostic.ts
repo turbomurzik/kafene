@@ -77,7 +77,7 @@ await payload.update({
     title: 'RU keyed diagnostic',
     sectionContent: {
       a: { heading: 'Альфа', body: 'Текст альфа' },
-      b: { heading: null, body: null },
+      b: { heading: ' \u200B\uFEFF ', body: '\u00A0\u2060' },
       c: { heading: 'Гамма', body: 'Текст гамма' },
     },
   },
@@ -128,6 +128,9 @@ console.log('KEYED SNAPSHOT:', JSON.stringify({
   ruDraft: { order: order(ruDraft), content: content(ruDraft) },
   ruPublished: { order: order(ruPublished), content: content(ruPublished) },
 }))
+
+assert.equal(content(ruDraft).b.heading, null)
+assert.equal(content(ruDraft).b.body, null)
 
 assert.deepEqual(order(enPublished), ['c', 'a', 'b'])
 assert.deepEqual(order(ruPublished), ['c', 'a', 'b'])
