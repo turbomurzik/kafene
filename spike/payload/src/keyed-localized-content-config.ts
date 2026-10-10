@@ -1,5 +1,28 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
-import { buildConfig, type CollectionConfig } from 'payload'
+import { buildConfig, type CollectionConfig, type FieldHook } from 'payload'
+import { collapseSemanticallyEmptyToNull } from './localized-section-semantics.js'
+
+const normalizeKeyedLocalizedContent: FieldHook = ({ value }) => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return value
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([sectionKey, raw]) => {
+      if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+        return [sectionKey, raw]
+      }
+
+      const item = raw as Record<string, unknown>
+      return [
+        sectionKey,
+        {
+          ...item,
+          heading: collapseSemanticallyEmptyToNull(item.heading),
+          body: collapseSemanticallyEmptyToNull(item.body),
+        },
+      ]
+    }),
+  )
+}
 
 const Guides: CollectionConfig = {
   slug: 'diag-keyed-localized-content',
@@ -35,6 +58,9 @@ const Guides: CollectionConfig = {
       type: 'json',
       localized: true,
       required: false,
+      hooks: {
+        beforeChange: [normalizeKeyedLocalizedContent],
+      },
     },
   ],
 }
