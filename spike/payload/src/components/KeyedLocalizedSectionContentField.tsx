@@ -17,6 +17,12 @@ function asLocalizedMap(value: unknown): LocalizedMap {
     : {}
 }
 
+function asLocalizedEntry(value: unknown): LocalizedEntry {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? value as LocalizedEntry
+    : {}
+}
+
 export const KeyedLocalizedSectionContentField: JSONFieldClientComponent = ({ path }) => {
   const { value, setValue } = useField({ path })
   const sections = useFormFields(([fields]) => fields.sections?.value)
@@ -35,7 +41,7 @@ export const KeyedLocalizedSectionContentField: JSONFieldClientComponent = ({ pa
     setValue({
       ...content,
       [sectionKey]: {
-        ...asLocalizedMap({ value: content[sectionKey] }).value,
+        ...asLocalizedEntry(content[sectionKey]),
         [field]: nextValue,
       },
     })
