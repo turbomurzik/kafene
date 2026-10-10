@@ -22,11 +22,13 @@
     "keyed-localized-publish-policy": "NODE_ENV=development tsx src/run-keyed-localized-publish-policy.ts",
     "keyed-localized-projection": "NODE_ENV=test tsx --test src/keyed-localized-projection.test.ts",
     "keyed-localized-content-contract": "NODE_ENV=development tsx src/run-keyed-localized-content-contract.ts",
-    "keyed-localized-admin": "NODE_ENV=test tsx --test src/keyed-localized-admin.test.ts"
+    "keyed-localized-admin": "NODE_ENV=test tsx --test src/keyed-localized-admin.test.ts",
+    "keyed-localized-admin-component": "tsc -p tsconfig.admin.json"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
-    "payload": "3.90.2"
+    "payload": "3.90.2",
+    "@payloadcms/ui": "3.90.2"
   },
   "devDependencies": {
     "tsx": "4.20.6",
