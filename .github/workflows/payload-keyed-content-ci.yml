@@ -71,5 +71,8 @@ jobs:
       - name: Keyed Admin component typecheck
         run: npm run keyed-localized-admin-component
 
+      - name: Keyed Admin import-map smoke
+        run: npm run keyed-localized-admin-importmap
+
       - name: Consolidated keyed contract
         run: npm run keyed-localized-content-contract
