@@ -1,0 +1,75 @@
+name: Payload keyed content CI
+
+on:
+  push:
+    branches:
+      - docs/product-consolidation
+    paths:
+      - 'spike/payload/**'
+      - '.github/workflows/payload-keyed-content-ci.yml'
+  pull_request:
+    paths:
+      - 'spike/payload/**'
+      - '.github/workflows/payload-keyed-content-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: payload-keyed-content-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  keyed-content:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: kafene_payload_spike
+          POSTGRES_USER: kafene
+          POSTGRES_PASSWORD: kafene
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U kafene -d kafene_payload_spike"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+
+    defaults:
+      run:
+        working-directory: spike/payload
+
+    env:
+      DATABASE_URL: postgresql://kafene:kafene@127.0.0.1:55432/kafene_payload_spike
+      PAYLOAD_SECRET: kafene-ci-keyed-content
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Canonical semantic helper
+        run: npm run localized-section-semantics
+
+      - name: Keyed Admin model
+        run: npm run keyed-localized-admin
+
+      - name: Keyed projection
+        run: npm run keyed-localized-projection
+
+      - name: Keyed Admin component typecheck
+        run: npm run keyed-localized-admin-component
+
+      - name: Consolidated keyed contract
+        run: npm run keyed-localized-content-contract
