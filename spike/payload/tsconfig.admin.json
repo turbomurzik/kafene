@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src/components/KeyedLocalizedSectionContentField.tsx",
+    "src/keyed-localized-admin.ts",
+    "src/localized-section-semantics.ts"
+  ]
+}
