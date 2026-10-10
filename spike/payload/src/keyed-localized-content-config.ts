@@ -1,3 +1,5 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { buildConfig, type CollectionConfig, type FieldHook } from 'payload'
 import { collapseSemanticallyEmptyToNull } from './localized-section-semantics.js'
@@ -25,6 +27,8 @@ const normalizeKeyedLocalizedContent: FieldHook = ({ value }) => {
     }),
   )
 }
+
+const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const Guides: CollectionConfig = {
   slug: 'diag-keyed-localized-content',
@@ -69,6 +73,11 @@ const Guides: CollectionConfig = {
       hooks: {
         beforeChange: [normalizeKeyedLocalizedContent],
       },
+      admin: {
+        components: {
+          Field: '/components/KeyedLocalizedSectionContentField#KeyedLocalizedSectionContentField',
+        },
+      },
     },
   ],
 }
@@ -78,6 +87,12 @@ if (!databaseURL) throw new Error('DATABASE_URL is required')
 
 export default buildConfig({
   secret: process.env.PAYLOAD_SECRET ?? 'kafene-keyed-localized-content-diagnostic',
+  admin: {
+    importMap: {
+      baseDir: dirname,
+      importMapFile: path.resolve(dirname, '../.generated/keyed-localized-importMap.js'),
+    },
+  },
   db: postgresAdapter({
     idType: 'uuid',
     pool: { connectionString: databaseURL },
