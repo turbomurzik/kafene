@@ -1,6 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { buildConfig, type CollectionConfig, type FieldHook } from 'payload'
 import { collapseSemanticallyEmptyToNull } from './localized-section-semantics.js'
+import { validateKeyedLocalizedPublication } from './keyed-localized-publish-policy.js'
 
 const normalizeKeyedLocalizedContent: FieldHook = ({ value }) => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return value
@@ -26,6 +27,9 @@ const normalizeKeyedLocalizedContent: FieldHook = ({ value }) => {
 
 const Guides: CollectionConfig = {
   slug: 'diag-keyed-localized-content',
+  hooks: {
+    beforeChange: [validateKeyedLocalizedPublication],
+  },
   versions: {
     drafts: {
       localizeStatus: true,
