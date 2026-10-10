@@ -19,7 +19,8 @@
     "localized-content-contract": "NODE_ENV=development tsx src/run-localized-content-contract.ts",
     "shared-structure-publication-diagnostic": "NODE_ENV=development tsx src/run-shared-structure-publication-diagnostic.ts",
     "keyed-localized-content-diagnostic": "NODE_ENV=development tsx src/run-keyed-localized-content-diagnostic.ts",
-    "keyed-localized-publish-policy": "NODE_ENV=development tsx src/run-keyed-localized-publish-policy.ts"
+    "keyed-localized-publish-policy": "NODE_ENV=development tsx src/run-keyed-localized-publish-policy.ts",
+    "keyed-localized-projection": "NODE_ENV=test tsx --test src/keyed-localized-projection.test.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
