@@ -23,7 +23,8 @@
     "keyed-localized-projection": "NODE_ENV=test tsx --test src/keyed-localized-projection.test.ts",
     "keyed-localized-content-contract": "NODE_ENV=development tsx src/run-keyed-localized-content-contract.ts",
     "keyed-localized-admin": "NODE_ENV=test tsx --test src/keyed-localized-admin.test.ts",
-    "keyed-localized-admin-component": "tsc -p tsconfig.admin.json"
+    "keyed-localized-admin-component": "tsc -p tsconfig.admin.json",
+    "keyed-localized-admin-importmap": "rm -rf .generated && PAYLOAD_CONFIG_PATH=src/keyed-localized-content-config.ts payload generate:importmap && grep -q \"KeyedLocalizedSectionContentField\" .generated/keyed-localized-importMap.js"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
