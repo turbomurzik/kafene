@@ -1,6 +1,6 @@
 # Schema decision: localized section completeness
 
-Status: **KEYED REPLACEMENT DIAGNOSTIC PASSED — OWNER REVIEW PENDING**
+Status: **KEYED CONTRACT PASSED — OWNER REVIEW PENDING**
 
 ## Decision status
 
@@ -96,6 +96,8 @@ Publish-context diagnostic on commit `3482dfefbe7641c2efabbd1347fa53e49afd9961` 
 
 The keyed replacement diagnostic on commit `1fadfada99e3308e6d91e9bd047a4e9529be7b8f` passed on a fresh database: after EN reordered the shared structure and published it, RU published structure advanced to the new order while RU localized content remained correctly associated by `sectionKey`.
 
+The consolidated keyed contract on commit `3ff40888ba5fcd4a30c8dcc3f8c8e6a09b1a577b` then passed 7/7 on a clean database, covering semantic-empty normalization, partial/zero-complete publication rejection, complete-only projection, cross-locale reorder safety and `locale=all` fail-closed behavior.
+
 ## Implementation shape
 
 The helper/policy work remains reusable, but the storage shape must change before production wiring.
@@ -117,7 +119,7 @@ Storage redesign requirement:
 
 - shared reorderable structure must not carry localized child fields whose persistence can become position-aligned across locale publication;
 - localized content should instead be keyed by stable section identity outside the reorderable shared array, or moved to a separate identity-bearing collection;
-- the keyed replacement shape passed its first clean storage-alignment diagnostic; production integration still requires keyed normalization, publish validation, projection, Admin UX and lifecycle coverage.
+- the keyed replacement shape passed the consolidated 7/7 contract on a clean database, including normalization, publish validation, cross-locale reorder safety and projection; production integration still requires Admin UX and remaining lifecycle coverage.
 
 ## Still open
 
