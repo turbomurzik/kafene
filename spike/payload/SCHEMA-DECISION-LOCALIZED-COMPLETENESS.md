@@ -1,6 +1,6 @@
 # Schema decision: localized section completeness
 
-Status: **BLOCKED BY SHARED-ARRAY LOCALIZATION HAZARD — OWNER REVIEW PENDING**
+Status: **KEYED REPLACEMENT DIAGNOSTIC PASSED — OWNER REVIEW PENDING**
 
 ## Decision status
 
@@ -94,6 +94,8 @@ A later, different diagnostic found a real cross-locale publication hazard that 
 
 Publish-context diagnostic on commit `3482dfefbe7641c2efabbd1347fa53e49afd9961` produced the same expected A/B/C persisted publication results on two clean runs and characterized the `locale=all` object-status path.
 
+The keyed replacement diagnostic on commit `1fadfada99e3308e6d91e9bd047a4e9529be7b8f` passed on a fresh database: after EN reordered the shared structure and published it, RU published structure advanced to the new order while RU localized content remained correctly associated by `sectionKey`.
+
 ## Implementation shape
 
 The helper/policy work remains reusable, but the storage shape must change before production wiring.
@@ -115,7 +117,7 @@ Storage redesign requirement:
 
 - shared reorderable structure must not carry localized child fields whose persistence can become position-aligned across locale publication;
 - localized content should instead be keyed by stable section identity outside the reorderable shared array, or moved to a separate identity-bearing collection;
-- the replacement shape requires its own clean diagnostic before production integration.
+- the keyed replacement shape passed its first clean storage-alignment diagnostic; production integration still requires keyed normalization, publish validation, projection, Admin UX and lifecycle coverage.
 
 ## Still open
 
